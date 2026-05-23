@@ -1,0 +1,2323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Kortej</title>
+<meta name="description" content="Kortej" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Jost:wght@200;300;400;500&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+  /* ───────────────────────────── tokens */
+  :root{
+    --umber:        #14100E;
+    --umber-deep:   #2A2018;
+    --gold:         #CCB87A;
+    --linen:        #EEE8E2;
+    --line:         rgba(238,232,226,0.10);
+    --line-strong:  rgba(238,232,226,0.22);
+    --glass:        rgba(20,16,14,0.55);
+    --glass-strong: rgba(20,16,14,0.78);
+    --gold-soft:    rgba(204,184,122,0.14);
+
+    --display: "Cormorant", "Cormorant Garamond", "Times New Roman", serif;
+    --serif:   "Cormorant Garamond", "Times New Roman", serif;
+    --sans:    "Jost", system-ui, sans-serif;
+
+    --ease: cubic-bezier(.22,.61,.36,1);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--umber);
+    color:var(--linen);
+    font-family:var(--sans);
+    font-weight:300;
+    letter-spacing:.02em;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+
+  /* ───────────────────────────── background
+     A still umber base + drifting incense-smoke canvas + grain & vignette.
+  */
+  .bg-texture{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(60% 50% at 50% 44%,
+        rgba(204,184,122,.04) 0%,
+        rgba(160,124,72,.02) 35%,
+        transparent 70%),
+      linear-gradient(180deg,
+        #100C0A 0%,
+        #14100E 45%,
+        #0E0B09 100%);
+  }
+  .smoke-layer{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+  }
+  .smoke-layer canvas{
+    width:100%;height:100%;display:block;
+  }
+
+  /* film grain + vignette */
+  body::before{
+    content:"";
+    position:fixed;inset:0;pointer-events:none;z-index:1;
+    background:
+      radial-gradient(120% 120% at 50% 48%,
+        transparent 0%,
+        transparent 48%,
+        rgba(0,0,0,.32) 78%,
+        rgba(0,0,0,.62) 100%);
+    mix-blend-mode:multiply;
+  }
+  body::after{
+    content:"";
+    position:fixed;inset:0;pointer-events:none;z-index:2;opacity:.07;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  ::selection{background:var(--gold);color:var(--umber)}
+
+  /* ───────────────────────────── custom cursor */
+  html, body, html *{cursor:none !important}
+  input, textarea, [contenteditable]{cursor:text !important}
+  @media (hover:none){
+    html, body, html *{cursor:auto !important}
+    input, textarea{cursor:text !important}
+    .cursor{display:none}
+  }
+
+  .cursor{
+    position:fixed;left:0;top:0;
+    width:26px;height:26px;border-radius:50%;
+    background:transparent;
+    border:1.5px solid rgba(204,184,122,.95);
+    box-shadow:
+      0 0 6px rgba(204,184,122,.35),
+      inset 0 0 5px rgba(204,184,122,.15);
+    pointer-events:none;
+    z-index:9999;
+    transform:translate(-100px,-100px);
+    transition:width .3s var(--ease),height .3s var(--ease),
+               border-color .3s var(--ease),
+               opacity .25s var(--ease),box-shadow .3s var(--ease);
+    will-change:transform;
+  }
+  .cursor.hover{
+    width:48px;height:48px;
+    border-color:rgba(204,184,122,1);
+    box-shadow:
+      0 0 14px rgba(204,184,122,.4),
+      inset 0 0 8px rgba(204,184,122,.2);
+  }
+  .cursor.hidden{opacity:0}
+
+  /* ───────────────────────────── header */
+  .topbar{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:24px 32px;
+    pointer-events:none;
+  }
+  .topbar > *{pointer-events:auto}
+
+  /* city clock — small, tap to cycle through cities */
+  .city-clock{
+    background:none;border:0;cursor:pointer;
+    display:flex;align-items:baseline;gap:10px;
+    font-family:var(--sans);
+    color:var(--linen);
+    opacity:.7;
+    transition:opacity .3s var(--ease),color .3s var(--ease);
+    padding:0;
+  }
+  .city-clock:hover{opacity:1;color:var(--gold)}
+  .city-clock .cc-city{
+    font-size:10px;letter-spacing:.32em;text-transform:uppercase;
+  }
+  .city-clock .cc-time{
+    font-size:11px;letter-spacing:.14em;
+    font-variant-numeric:tabular-nums;
+  }
+  .city-clock .cc-dot{
+    width:3px;height:3px;border-radius:50%;
+    background:currentColor;opacity:.5;
+    align-self:center;
+  }
+
+  .menu-trigger{
+    background:none;border:0;cursor:pointer;color:var(--linen);
+    display:flex;align-items:center;gap:14px;
+    font-family:var(--sans);font-size:11px;letter-spacing:.4em;
+    text-transform:uppercase;opacity:.7;transition:opacity .3s var(--ease);
+  }
+  .menu-trigger:hover{opacity:1;color:var(--gold)}
+  .menu-trigger .lines{display:inline-flex;flex-direction:column;gap:5px}
+  .menu-trigger .lines span{
+    width:22px;height:1px;background:currentColor;display:block;
+    transition:transform .4s var(--ease);
+  }
+  .menu-trigger .lines span:last-child{width:14px;align-self:flex-end}
+
+  .util{
+    position:fixed;bottom:24px;left:0;right:0;z-index:50;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:0 32px;pointer-events:none;
+  }
+  .util > *{pointer-events:auto}
+
+  /* faint persistent contact line, centered at the very bottom */
+  .footer-mail{
+    position:fixed;left:50%;bottom:27px;
+    transform:translateX(-50%);
+    z-index:49;
+    font-family:var(--sans);font-weight:300;
+    font-size:10px;letter-spacing:.22em;
+    color:var(--linen);
+    text-decoration:none;
+    opacity:.20;
+    transition:opacity .5s var(--ease),color .5s var(--ease);
+    white-space:nowrap;
+  }
+  .footer-mail:hover{opacity:.7;color:var(--gold)}
+  body.intro-on .footer-mail{opacity:0}
+
+  .util-btn{
+    background:transparent;border:1px solid var(--line);
+    color:var(--linen);
+    font-family:var(--sans);font-size:10px;letter-spacing:.32em;
+    text-transform:uppercase;
+    padding:10px 14px;border-radius:999px;
+    cursor:pointer;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    background:var(--glass);
+    transition:all .35s var(--ease);
+    display:inline-flex;align-items:center;gap:10px;
+  }
+  .util-btn:hover{border-color:var(--gold);color:var(--gold)}
+  .util-btn .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 10px var(--gold);
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  .util-btn.muted .dot{background:rgba(238,232,226,.35);box-shadow:none;animation:none}
+  @keyframes pulse{0%,100%{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
+
+  .lang{display:flex;gap:0;border:1px solid var(--line);border-radius:999px;overflow:hidden;backdrop-filter:blur(12px);background:var(--glass)}
+  .lang button{
+    background:transparent;border:0;color:var(--linen);
+    font-family:var(--sans);font-size:10px;letter-spacing:.3em;text-transform:uppercase;
+    padding:10px 14px;cursor:pointer;opacity:.45;transition:all .3s var(--ease);
+  }
+  .lang button.active{opacity:1;color:var(--gold)}
+  .lang button:hover{opacity:1}
+
+  /* ───────────────────────────── nav overlay */
+  .nav-overlay{
+    position:fixed;inset:0;z-index:100;
+    background:var(--glass-strong);
+    backdrop-filter:blur(28px) saturate(140%);
+    -webkit-backdrop-filter:blur(28px) saturate(140%);
+    opacity:0;pointer-events:none;
+    transition:opacity .5s var(--ease);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .nav-overlay.open{opacity:1;pointer-events:auto}
+
+  .nav-overlay nav{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .nav-overlay a{
+    font-family:var(--display);font-weight:300;
+    color:var(--linen);text-decoration:none;
+    font-size:clamp(28px,3.6vw,46px);line-height:1.3;letter-spacing:.02em;
+    opacity:0;transform:translateY(20px);
+    transition:opacity .5s var(--ease),transform .5s var(--ease),color .3s var(--ease);
+    position:relative;padding:6px 24px;
+  }
+  .nav-overlay.open a{opacity:.7;transform:translateY(0)}
+  .nav-overlay.open a:nth-child(1){transition-delay:.10s}
+  .nav-overlay.open a:nth-child(2){transition-delay:.16s}
+  .nav-overlay.open a:nth-child(3){transition-delay:.22s}
+  .nav-overlay.open a:nth-child(4){transition-delay:.28s}
+  .nav-overlay.open a:nth-child(5){transition-delay:.34s}
+  .nav-overlay a:hover{opacity:1;color:var(--gold)}
+  .nav-overlay a.current{
+    color:var(--gold);opacity:1;
+    text-shadow:0 0 24px rgba(204,184,122,.45);
+  }
+  /* symmetric hairline marks on both sides of the active item */
+  .nav-overlay a.current::before,
+  .nav-overlay a.current::after{
+    content:"";position:absolute;top:50%;
+    width:18px;height:1px;background:var(--gold);
+    transform:translateY(-50%);
+    opacity:.8;
+  }
+  .nav-overlay a.current::before{left:-6px}
+  .nav-overlay a.current::after{right:-6px}
+
+  .nav-close{
+    position:absolute;top:24px;right:32px;
+    background:none;border:0;color:var(--linen);cursor:pointer;
+    font-family:var(--sans);font-size:11px;letter-spacing:.4em;text-transform:uppercase;
+    opacity:.6;transition:opacity .3s var(--ease);
+  }
+  .nav-close:hover{opacity:1;color:var(--gold)}
+
+  .nav-foot{
+    position:absolute;bottom:32px;left:32px;right:32px;
+    display:flex;justify-content:space-between;
+    font-family:var(--sans);font-size:10px;letter-spacing:.3em;text-transform:uppercase;
+    color:var(--linen);opacity:.4;
+  }
+
+  /* ───────────────────────────── pages */
+  .page{
+    position:fixed;inset:0;
+    transition:opacity .6s var(--ease);
+  }
+  /* home is always rendered; other pages fade in/out on top of it */
+  #home{opacity:1;pointer-events:none;z-index:5}
+  #home.active{pointer-events:auto}
+
+  #projects, #about, #contact, #careers{
+    opacity:0;pointer-events:none;
+    background:rgba(20,16,14,.55);
+    backdrop-filter:blur(22px) saturate(140%);
+    -webkit-backdrop-filter:blur(22px) saturate(140%);
+    z-index:10;
+  }
+  #projects.active, #about.active, #contact.active, #careers.active{
+    opacity:1;pointer-events:auto;
+  }
+
+  /* ── HOME */
+  #home{
+    display:flex;
+    align-items:stretch;
+    overflow:hidden;
+  }
+
+  /* left zone — 60% of the screen, logo centered within it */
+  .home-logo{
+    flex:0 0 60%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 4vw;
+    z-index:6;
+    /* reveal animation: logo eases from screen-centre into its zone — slow */
+    transition:transform 2.4s var(--ease);
+  }
+  .home-logo img{
+    width:min(34vw,560px);
+    height:auto;display:block;
+    user-select:none;-webkit-user-drag:none;pointer-events:none;
+    transition:width 2.4s var(--ease);
+  }
+  /* placeholder wordmark (unused once real logo is in, kept for fallback) */
+  .home-logo .wordmark{
+    font-family:var(--display);font-weight:300;
+    font-size:clamp(48px,7vw,104px);
+    letter-spacing:.04em;
+    color:var(--gold);
+    line-height:1;
+    user-select:none;
+  }
+
+  /* right zone — 40% of the screen, rotating content centered within it */
+  .home-feature{
+    flex:0 0 40%;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    padding:0 4vw;
+    z-index:6;
+    /* hidden until the logo finishes sliding into place;
+       fades in slowly, starting 0.5s after the slide begins */
+    opacity:0;
+    transition:opacity 1.6s var(--ease) .5s;
+  }
+
+  /* the whole home view brightens as the logo settles —
+     keeps the "still loading / just opened" feel */
+  #home{
+    filter:brightness(.62);
+    transition:filter 2.6s var(--ease);
+  }
+  body.home-revealed #home{
+    filter:brightness(1);
+  }
+
+  /* PHASE 1 — logo centred on screen, content hidden.
+     The left zone is 60% wide; to visually centre the logo on the whole
+     screen we shift it right by (50% - 30%) = 20% of the viewport. */
+  body.home-centering .home-logo{
+    transform:translateX(20vw);
+  }
+  body.home-centering .home-logo img{
+    width:min(34vw,560px);   /* same size as settled — no resize on slide */
+  }
+  body.home-centering .home-feature{
+    opacity:0;
+  }
+
+  /* PHASE 2 — logo settled in its zone, content revealed */
+  body.home-revealed .home-logo{
+    transform:translateX(0);
+  }
+  body.home-revealed .home-feature{
+    opacity:1;
+  }
+
+  /* each slide stacks in the same place; only one visible at a time.
+     The box extends well past the 40% feature zone toward the right
+     edge of the screen so text lines can run long instead of wrapping
+     after two words. */
+  .feat-slide{
+    position:absolute;
+    left:4vw;
+    right:-22vw;
+    top:50%;
+    transform:translateY(calc(-50% + 14px));
+    opacity:0;
+    transition:opacity 1.4s var(--ease), transform 1.4s var(--ease);
+    pointer-events:none;
+  }
+  .feat-slide.show{
+    opacity:1;
+    transform:translateY(-50%);
+    pointer-events:auto;
+  }
+
+  /* slide 1 — about text */
+  .feat-about{
+    font-family:var(--serif);font-weight:300;
+    font-size:clamp(15px,1.35vw,20px);
+    line-height:1.65;
+    color:var(--linen);
+    max-width:42ch;
+  }
+
+  /* slide 2 — numbers */
+  .feat-stats{
+    display:flex;gap:clamp(28px,4vw,56px);
+  }
+  .feat-stat .num{
+    font-family:var(--display);font-weight:300;
+    font-size:clamp(34px,4.4vw,62px);
+    line-height:1;
+    color:var(--gold);
+    letter-spacing:.01em;
+  }
+  .feat-stat .label{
+    margin-top:22px;
+    font-family:var(--sans);font-weight:300;
+    font-size:clamp(9px,.72vw,11px);
+    letter-spacing:.26em;text-transform:uppercase;
+    color:var(--linen);opacity:.6;
+  }
+
+  /* slide 3 — motto */
+  .feat-motto{
+    font-family:var(--serif);font-weight:300;font-style:italic;
+    font-size:clamp(15px,1.45vw,21px);
+    line-height:1.6;
+    color:var(--linen);
+    max-width:44ch;
+  }
+
+  /* slide progress dots */
+  .feat-dots{
+    position:absolute;
+    left:4vw;
+    bottom:14vh;
+    display:flex;gap:10px;
+  }
+  .feat-dots span{
+    width:5px;height:5px;border-radius:50%;
+    background:var(--linen);opacity:.22;
+    transition:opacity .5s var(--ease),background .5s var(--ease),width .5s var(--ease);
+  }
+  .feat-dots span.on{
+    opacity:1;background:var(--gold);width:22px;border-radius:3px;
+  }
+
+  /* ── PROJECTS */
+  #projects{overflow:hidden}
+  .projects-wrap{
+    height:100vh;width:100vw;
+    overflow-y:auto;scroll-snap-type:y mandatory;
+    scrollbar-width:none;
+  }
+  .projects-wrap::-webkit-scrollbar{display:none}
+
+  .proj-intro,.proj-row,.proj-end{
+    height:100vh;scroll-snap-align:start;scroll-snap-stop:always;
+    display:flex;align-items:center;justify-content:center;
+    padding:0 8vw;position:relative;
+  }
+
+  .proj-intro{flex-direction:column;gap:24px;text-align:center}
+  .proj-intro .eyebrow{
+    font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:var(--gold);opacity:.7;
+  }
+  .proj-intro h1{
+    font-family:var(--display);font-weight:300;
+    font-size:clamp(64px,9vw,128px);line-height:1;letter-spacing:.01em;
+    color:var(--linen);
+  }
+  .proj-intro p{
+    max-width:520px;color:var(--linen);opacity:.55;
+    font-size:14px;line-height:1.7;
+  }
+  .proj-intro .scroll-hint{
+    position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+    font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:var(--linen);opacity:.4;
+  }
+  .scroll-hint .line{width:1px;height:40px;background:var(--linen);animation:fall 2.2s var(--ease) infinite}
+  @keyframes fall{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+  .proj-row{cursor:default}
+  .proj-row .inner{
+    width:100%;max-width:1200px;
+    display:grid;grid-template-columns:120px 1fr 1fr 120px;
+    align-items:end;gap:48px;
+    padding-bottom:32px;border-bottom:1px solid var(--line);
+    transition:border-color .4s var(--ease),padding .4s var(--ease);
+    cursor:pointer;   /* only the content row is clickable */
+  }
+  .proj-row .inner:hover{border-color:var(--gold);padding-bottom:48px}
+  .proj-row .code{
+    font-family:var(--sans);font-size:11px;letter-spacing:.4em;color:var(--gold);
+  }
+  .proj-row .name{
+    font-family:var(--serif);font-weight:300;
+    font-size:clamp(40px,6vw,84px);line-height:.95;letter-spacing:0;
+    color:var(--linen);
+  }
+  .proj-row .loc{
+    font-family:var(--serif);font-weight:300;
+    font-size:18px;letter-spacing:.04em;color:var(--linen);opacity:.7;
+  }
+  .proj-row .date{
+    font-family:var(--sans);font-size:12px;letter-spacing:.3em;color:var(--linen);opacity:.5;
+    text-align:right;
+  }
+  .proj-row .open-cue{
+    position:absolute;right:8vw;top:50%;transform:translate(40px,-50%);
+    font-family:var(--sans);font-size:10px;letter-spacing:.4em;text-transform:uppercase;
+    color:var(--gold);opacity:0;transition:all .4s var(--ease);
+    pointer-events:none;
+  }
+  .proj-row .inner:hover ~ .open-cue,
+  .proj-row:hover .open-cue{opacity:.85;transform:translate(0,-50%)}
+
+  /* ── project filter bar */
+  .proj-filter{
+    position:absolute;top:84px;left:50%;transform:translateX(-50%);
+    display:flex;flex-wrap:wrap;justify-content:center;gap:6px;
+    z-index:8;
+  }
+  .proj-filter button{
+    background:transparent;border:1px solid var(--line);
+    color:var(--linen);
+    font-family:var(--sans);font-weight:300;
+    font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+    padding:9px 16px;border-radius:999px;
+    cursor:pointer;opacity:.55;
+    transition:all .35s var(--ease);
+    white-space:nowrap;
+  }
+  .proj-filter button:hover{opacity:1;border-color:var(--gold);color:var(--gold)}
+  .proj-filter button.active{
+    opacity:1;border-color:var(--gold);color:var(--umber);
+    background:var(--gold);
+  }
+
+  .proj-counter{
+    position:absolute;left:8vw;top:50%;transform:translateY(-50%);
+    font-family:var(--serif);font-weight:300;
+    font-size:12px;letter-spacing:.3em;color:var(--linen);opacity:.3;
+    writing-mode:vertical-rl;text-orientation:mixed;
+  }
+
+  .proj-end{flex-direction:column;gap:18px;text-align:center}
+  .proj-end .eyebrow{font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:var(--gold);opacity:.6}
+  .proj-end h2{
+    font-family:var(--display);font-weight:300;
+    font-size:clamp(36px,4.5vw,64px);line-height:1.15;color:var(--linen);
+    max-width:18ch;letter-spacing:.01em;
+  }
+
+  /* ── ABOUT */
+  #about{
+    display:block;overflow-y:auto;
+    scroll-snap-type:y mandatory;
+  }
+  #about::-webkit-scrollbar{display:none}
+  #about{scrollbar-width:none}
+  .about-scroll{
+    width:100%;
+  }
+  /* studio statement — first full screen */
+  .about-wrap{
+    min-height:100vh;
+    scroll-snap-align:start;scroll-snap-stop:always;
+    max-width:1100px;margin:0 auto;
+    display:flex;flex-direction:column;justify-content:center;
+    gap:30px;
+    padding:120px 7vw 90px;
+    position:relative;
+  }
+  .about-wrap .eyebrow{font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:var(--gold);opacity:.7}
+  .about-wrap h1{
+    font-family:var(--display);font-weight:300;
+    font-size:clamp(38px,4.4vw,66px);line-height:1.14;letter-spacing:.01em;color:var(--linen);
+    max-width:20ch;
+  }
+  .about-wrap .body{
+    display:flex;flex-direction:column;gap:20px;
+    color:var(--linen);opacity:.8;
+    font-family:var(--serif);font-weight:300;font-size:17px;line-height:1.8;
+    max-width:none;
+  }
+  .about-wrap .body p:first-child::first-letter{
+    font-family:var(--display);font-weight:300;
+    font-size:84px;
+    line-height:1;
+    float:left;
+    margin:2px 14px 0 0;
+    padding:0;
+    color:var(--gold);
+  }
+  .about-rule{height:1px;background:var(--line);width:60px}
+
+  /* scroll cue toward founders */
+  .about-scrollcue{
+    position:absolute;left:8vw;bottom:54px;
+    display:flex;flex-direction:column;gap:12px;
+    font-family:var(--sans);font-size:10px;letter-spacing:.4em;
+    text-transform:uppercase;color:var(--linen);opacity:.4;
+  }
+  .about-scrollcue .cue-line{
+    width:1px;height:38px;background:var(--linen);
+    animation:fall 2.2s var(--ease) infinite;
+  }
+
+  /* founders — second screen */
+  .founders-wrap{
+    min-height:100vh;
+    scroll-snap-align:start;scroll-snap-stop:always;
+    max-width:1100px;margin:0 auto;
+    display:flex;flex-direction:column;justify-content:center;
+    gap:48px;
+    padding:110px 7vw 110px;
+  }
+  .founders-wrap .eyebrow{font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:var(--gold);opacity:.7}
+  .founders-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:64px;
+  }
+  /* each founder card is itself a 3-row grid so the name / role / meta
+     blocks line up horizontally between the two founders */
+  .founder{
+    display:grid;
+    grid-template-rows:auto auto 1fr;
+    gap:16px;
+    padding-top:30px;border-top:1px solid var(--line);
+  }
+  .founder-head{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    min-height:46px;
+  }
+  .founder-head h3{
+    font-family:var(--display);font-weight:300;
+    font-size:clamp(26px,2.8vw,36px);letter-spacing:.01em;color:var(--linen);
+    line-height:1;
+  }
+  /* small round flags beside founder names — all the same size */
+  .flags{display:inline-flex;gap:7px;align-items:center}
+  .flag{
+    width:20px;height:20px;
+    display:inline-block;
+    border-radius:50%;
+    border:1px solid rgba(238,232,226,.22);
+    position:relative;overflow:hidden;
+    flex:0 0 auto;
+    opacity:.85;
+  }
+  /* Turkish flag uses an uploaded image */
+  .flag-img{
+    object-fit:cover;
+  }
+  /* Italian flag — green / white / red vertical thirds */
+  .flag-it{
+    background:linear-gradient(90deg,
+      #009246 0 33.33%,#fff 33.33% 66.66%,#CE2B37 66.66%);
+  }
+  /* Swedish flag — blue field with off-centre yellow Nordic cross */
+  .flag-se{
+    background:
+      linear-gradient(90deg,transparent 0 7px,#FECC00 7px 10px,transparent 10px),
+      linear-gradient(0deg,transparent 0 8px,#FECC00 8px 11px,transparent 11px),
+      #006AA7;
+  }
+  .founder-role{
+    font-family:var(--sans);font-weight:300;
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--gold);opacity:.85;
+    min-height:1.4em;
+  }
+  .founder-meta{
+    display:flex;flex-direction:column;gap:8px;
+    font-family:var(--serif);font-weight:300;
+    font-size:15px;line-height:1.6;color:var(--linen);opacity:.7;
+  }
+
+  /* ── CONTACT */
+  /* ── CAREERS */
+  #careers{display:flex;align-items:center;justify-content:center;padding:120px 7vw 100px;overflow-y:auto}
+  #careers::-webkit-scrollbar{display:none}
+  #careers{scrollbar-width:none}
+  /* horizontal layout: intro on the left, form on the right */
+  .careers-wrap{
+    width:100%;max-width:1240px;
+    display:grid;
+    grid-template-columns:0.78fr 1fr;
+    gap:7vw;
+    align-items:center;
+  }
+  .careers-intro{display:flex;flex-direction:column;gap:22px}
+  .careers-intro .eyebrow{font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:var(--gold);opacity:.7}
+  .careers-intro h1{
+    font-family:var(--display);font-weight:300;
+    font-size:clamp(38px,4.2vw,62px);line-height:1.14;letter-spacing:.01em;color:var(--linen);
+  }
+  .careers-intro p{
+    font-family:var(--serif);font-weight:300;
+    font-size:16px;line-height:1.85;color:var(--linen);opacity:.72;
+  }
+  /* form sits directly on the page — no panel/box, like contact */
+  .careers-form{display:flex;flex-direction:column;gap:34px}
+  .careers-form .form-grid{
+    display:grid;grid-template-columns:1fr 1fr;
+    gap:30px 40px;
+  }
+  .careers-form .field.full{grid-column:1/-1}
+
+  .word-count{
+    font-family:var(--sans);font-size:9px;letter-spacing:.2em;
+    color:var(--linen);opacity:.4;text-align:right;margin-top:2px;
+  }
+  .word-count.over{color:#c9706a;opacity:.9}
+
+  /* file upload — styled label wrapping a hidden input */
+  .file-drop{
+    display:flex;align-items:center;gap:14px;
+    border:1px solid var(--line);border-radius:2px;
+    padding:14px 16px;cursor:pointer;
+    transition:border-color .3s var(--ease);
+  }
+  .file-drop:hover{border-color:var(--gold)}
+  .file-drop input[type="file"]{
+    position:absolute;width:1px;height:1px;
+    opacity:0;overflow:hidden;
+  }
+  .file-drop .file-label{
+    font-family:var(--sans);font-size:9px;letter-spacing:.26em;
+    text-transform:uppercase;color:var(--gold);
+    border:1px solid rgba(204,184,122,.5);
+    border-radius:999px;padding:7px 14px;
+    white-space:nowrap;flex:0 0 auto;
+    transition:all .3s var(--ease);
+  }
+  .file-drop:hover .file-label{background:var(--gold);color:var(--umber)}
+  .file-drop .file-name{
+    font-family:var(--sans);font-weight:300;font-size:13px;
+    color:var(--linen);opacity:.55;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .file-drop .file-name:empty::before{
+    content:attr(data-placeholder);opacity:.6;
+  }
+  .file-drop.filled{border-color:var(--gold)}
+  .file-drop.filled .file-name{opacity:.9;color:var(--gold)}
+
+  #contact{display:flex;align-items:center;justify-content:center;padding:120px 7vw 100px;overflow-y:auto}
+  #contact::-webkit-scrollbar{display:none}
+  #contact{scrollbar-width:none}
+  /* two-column: intro left, forms right — same language as careers */
+  .contact-wrap{
+    width:100%;max-width:1240px;
+    display:grid;
+    grid-template-columns:0.82fr 1fr;
+    gap:7vw;
+    align-items:center;
+  }
+  .contact-intro{display:flex;flex-direction:column;gap:22px}
+  .contact-intro .eyebrow{font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:var(--gold);opacity:.7}
+  .contact-intro h1{
+    font-family:var(--display);font-weight:300;
+    font-size:clamp(40px,4.6vw,70px);line-height:1.1;letter-spacing:.01em;color:var(--linen);
+  }
+  .contact-intro p{
+    font-family:var(--serif);font-weight:300;
+    font-size:16px;line-height:1.85;color:var(--linen);opacity:.72;
+  }
+  .contact-socials{display:flex;flex-direction:column;gap:2px;margin-top:14px}
+  .contact-socials a{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:16px 2px;border-bottom:1px solid var(--line);
+    color:var(--linen);text-decoration:none;
+    font-family:var(--serif);font-weight:300;font-size:19px;
+    transition:all .35s var(--ease);
+  }
+  .contact-socials a:first-child{border-top:1px solid var(--line)}
+  .contact-socials a:hover{color:var(--gold);padding-left:12px}
+  .contact-socials a .arrow{
+    font-family:var(--sans);font-size:13px;font-style:normal;
+    transition:transform .3s var(--ease);
+  }
+  .contact-socials a:hover .arrow{transform:translate(4px,-4px)}
+
+  /* right column — stacked form blocks, no boxes */
+  .contact-forms{display:flex;flex-direction:column;gap:40px}
+  .contact-block{display:flex;flex-direction:column;gap:24px}
+  .contact-block .block-eyebrow{
+    font-family:var(--sans);font-size:10px;letter-spacing:.34em;
+    text-transform:uppercase;color:var(--gold);opacity:.8;
+  }
+  .contact-block form{display:flex;flex-direction:column;gap:26px}
+  .contact-block .form-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:26px 36px;
+  }
+  .contact-block .field.full{grid-column:1/-1}
+  .contact-block .block-note{
+    font-family:var(--serif);font-weight:300;
+    font-size:13px;line-height:1.7;color:var(--linen);opacity:.5;
+  }
+  .contact-divider{height:1px;background:var(--line);width:100%}
+
+  .field{display:flex;flex-direction:column;gap:8px}
+  .field label{font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--linen);opacity:.45}
+  .field input,.field textarea{
+    background:transparent;border:0;border-bottom:1px solid var(--line);
+    padding:10px 0;color:var(--linen);
+    font-family:var(--sans);font-size:14px;
+    transition:border-color .3s var(--ease);
+    font-weight:300;
+  }
+  .field input:focus,.field textarea:focus{outline:0;border-bottom-color:var(--gold)}
+  .field textarea{resize:none;min-height:80px}
+  .field input::placeholder,.field textarea::placeholder{color:var(--linen);opacity:.3}
+
+  .btn{
+    align-self:flex-start;
+    background:transparent;border:1px solid var(--gold);color:var(--gold);
+    font-family:var(--sans);font-size:10px;letter-spacing:.4em;text-transform:uppercase;
+    padding:14px 24px;cursor:pointer;border-radius:999px;
+    transition:all .35s var(--ease);
+    margin-top:4px;
+  }
+  .btn:hover{background:var(--gold);color:var(--umber)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn:disabled:hover{background:transparent;color:var(--gold)}
+
+  /* legacy socials (kept for any other use) */
+  .socials{display:flex;flex-direction:column;gap:14px;margin-top:8px}
+  .socials a{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:18px 4px;border-bottom:1px solid var(--line);
+    color:var(--linen);text-decoration:none;
+    font-family:var(--serif);font-weight:400;font-size:22px;
+    transition:all .35s var(--ease);
+    position:relative;
+  }
+  .socials a:hover{color:var(--gold);padding-left:14px}
+  .socials a .arrow{
+    font-family:var(--sans);font-size:14px;font-style:normal;
+    transition:transform .3s var(--ease);
+  }
+  .socials a:hover .arrow{transform:translate(4px,-4px)}
+
+  /* small "new" badge next to social links */
+  .new-badge{
+    display:inline-block;
+    font-family:var(--sans);font-style:normal;font-weight:400;
+    font-size:8px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--gold);
+    border:1px solid rgba(204,184,122,.5);
+    border-radius:999px;
+    padding:3px 8px 2px;
+    margin-left:10px;
+    vertical-align:middle;
+    transform:translateY(-2px);
+  }
+
+  .panel-note{font-size:11px;line-height:1.7;color:var(--linen);opacity:.5;margin-top:auto}
+
+  /* ── modal */
+  .modal{
+    position:fixed;inset:0;z-index:120;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(20,16,14,0.78);
+    backdrop-filter:blur(28px) saturate(140%);
+    -webkit-backdrop-filter:blur(28px) saturate(140%);
+    opacity:0;pointer-events:none;
+    transition:opacity .4s var(--ease);
+    padding:24px;
+  }
+  .modal.open{opacity:1;pointer-events:auto}
+  .modal-card{
+    width:100%;max-width:560px;max-height:90vh;overflow-y:auto;
+    background:rgba(42,32,24,.55);
+    border:1px solid var(--line-strong);
+    padding:40px;border-radius:2px;
+    transform:translateY(16px) scale(.98);
+    transition:transform .5s var(--ease);
+    position:relative;
+    scrollbar-width:thin;scrollbar-color:var(--gold) transparent;
+  }
+  .modal.open .modal-card{transform:translateY(0) scale(1)}
+  .modal-card::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,var(--gold) 50%,transparent);
+  }
+  .modal-close{
+    position:absolute;top:18px;right:20px;
+    background:none;border:0;color:var(--linen);cursor:pointer;
+    font-family:var(--sans);font-size:10px;letter-spacing:.4em;text-transform:uppercase;
+    opacity:.5;transition:all .3s var(--ease);
+  }
+  .modal-close:hover{opacity:1;color:var(--gold)}
+  .modal-card .eyebrow{font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);opacity:.8;margin-bottom:14px}
+  .modal-card h2{
+    font-family:var(--display);font-weight:300;
+    font-size:42px;line-height:1.05;color:var(--linen);margin-bottom:8px;letter-spacing:.01em;
+  }
+  .modal-card .sub{font-size:13px;color:var(--linen);opacity:.55;margin-bottom:28px;line-height:1.6}
+  .modal-card .group-label{
+    font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--linen);opacity:.4;
+    margin:18px 0 10px;display:flex;align-items:center;gap:10px;
+  }
+  .modal-card .group-label::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .form-grid .full{grid-column:1/-1}
+
+  .toast{
+    position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--glass-strong);border:1px solid var(--gold);
+    color:var(--gold);font-family:var(--sans);font-size:11px;letter-spacing:.3em;text-transform:uppercase;
+    padding:14px 22px;border-radius:999px;z-index:200;
+    backdrop-filter:blur(18px);
+    opacity:0;pointer-events:none;
+    transition:all .4s var(--ease);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ───────────────────────────── intro / loading screen
+     Timeline:
+       0.0–1.0s : full black, nothing
+       1.0–4.0s : 3 soft glows emerge from offset positions, drift inward, breathe
+       4.0–5.5s : glows ease back into darkness as a single warm halo
+       5.5–7.5s : intro fades out, site contents fade in
+  */
+  .intro{
+    position:fixed;inset:0;z-index:200;
+    background:#000;
+    overflow:hidden;
+    animation:introOut 2s var(--ease) 5.5s forwards;
+  }
+  .intro.skip{display:none}
+  @keyframes introOut{to{opacity:0;visibility:hidden;pointer-events:none}}
+
+  .intro-bg{
+    position:absolute;inset:0;
+    background:#000;
+  }
+
+  /* three glow sources at slightly offset positions, drifting + breathing */
+  .intro-glow{
+    position:absolute;
+    width:60vmin;height:60vmin;
+    border-radius:50%;
+    opacity:0;
+    filter:blur(40px);
+    mix-blend-mode:screen;
+    transform:translate(-50%,-50%) scale(.4);
+  }
+  .intro-glow.a{
+    left:42%;top:46%;
+    background:radial-gradient(circle,
+      rgba(204,184,122,.55) 0%,
+      rgba(160,124,72,.22) 30%,
+      transparent 65%);
+    animation:glowA 5.5s cubic-bezier(.4,0,.2,1) forwards;
+  }
+  .intro-glow.b{
+    left:58%;top:54%;
+    background:radial-gradient(circle,
+      rgba(238,220,170,.40) 0%,
+      rgba(204,184,122,.18) 35%,
+      transparent 70%);
+    animation:glowB 5.5s cubic-bezier(.4,0,.2,1) forwards;
+  }
+  .intro-glow.c{
+    left:51%;top:43%;
+    background:radial-gradient(circle,
+      rgba(180,140,86,.35) 0%,
+      rgba(74,58,36,.15) 40%,
+      transparent 72%);
+    animation:glowC 5.5s cubic-bezier(.4,0,.2,1) forwards;
+  }
+  @keyframes glowA{
+    0%, 18%  {opacity:0; transform:translate(-50%,-50%) scale(.4)  translate(-20vmin, 12vmin)}
+    40%      {opacity:.55;transform:translate(-50%,-50%) scale(.85) translate(-8vmin,  4vmin)}
+    65%      {opacity:.85;transform:translate(-50%,-50%) scale(1.1) translate(0,        0)}
+    85%      {opacity:.4; transform:translate(-50%,-50%) scale(1.2) translate(0,        0)}
+    100%     {opacity:0;  transform:translate(-50%,-50%) scale(1.3) translate(0,        0)}
+  }
+  @keyframes glowB{
+    0%, 22%  {opacity:0; transform:translate(-50%,-50%) scale(.5)  translate(16vmin, -10vmin)}
+    45%      {opacity:.45;transform:translate(-50%,-50%) scale(.95) translate(6vmin,  -2vmin)}
+    70%      {opacity:.75;transform:translate(-50%,-50%) scale(1.15) translate(0,       0)}
+    88%      {opacity:.3; transform:translate(-50%,-50%) scale(1.25) translate(0,       0)}
+    100%     {opacity:0;  transform:translate(-50%,-50%) scale(1.35) translate(0,       0)}
+  }
+  @keyframes glowC{
+    0%, 28%  {opacity:0; transform:translate(-50%,-50%) scale(.5)  translate(0,       -16vmin)}
+    50%      {opacity:.40;transform:translate(-50%,-50%) scale(.95) translate(0,        -6vmin)}
+    72%      {opacity:.65;transform:translate(-50%,-50%) scale(1.20) translate(0,        0)}
+    90%      {opacity:.25;transform:translate(-50%,-50%) scale(1.30) translate(0,        0)}
+    100%     {opacity:0;  transform:translate(-50%,-50%) scale(1.40) translate(0,        0)}
+  }
+
+  /* a soft warm vignette emerges underneath all the glows for cohesion */
+  .intro-warmth{
+    position:absolute;inset:0;
+    opacity:0;
+    background:radial-gradient(60% 50% at 50% 50%,
+      rgba(204,184,122,.10) 0%,
+      rgba(74,58,36,.05) 40%,
+      transparent 75%);
+    animation:warmth 5.5s cubic-bezier(.4,0,.2,1) forwards;
+  }
+  @keyframes warmth{
+    0%, 30% {opacity:0}
+    65%     {opacity:1}
+    100%    {opacity:0}
+  }
+
+  /* fade in main content during intro fade-out */
+  body.intro-on #home,
+  body.intro-on .topbar,
+  body.intro-on .util,
+  body.intro-on .cursor,
+  body.intro-on .smoke-layer,
+  body.intro-on .bg-texture{opacity:0}
+  body.intro-done #home,
+  body.intro-done .topbar,
+  body.intro-done .util,
+  body.intro-done .smoke-layer,
+  body.intro-done .bg-texture{
+    animation:contentIn 1.8s var(--ease) forwards;
+  }
+  @keyframes contentIn{
+    from{opacity:0}
+    to  {opacity:1}
+  }
+  body.intro-done .topbar{animation-delay:.4s}
+  body.intro-done .util{animation-delay:.6s}
+
+  /* ── responsive */
+  @media (max-width:880px){
+    .topbar{padding:18px 22px}
+    .util{padding:0 22px}
+    .proj-row .inner{grid-template-columns:80px 1fr;gap:14px;padding-bottom:24px}
+    .proj-row .inner .loc,.proj-row .inner .date{grid-column:2}
+    .proj-row .date{text-align:left}
+    .proj-counter{display:none}
+    .form-grid{grid-template-columns:1fr}
+    .careers-wrap{grid-template-columns:1fr;gap:48px}
+    .contact-wrap{grid-template-columns:1fr;gap:48px}
+    .contact-block .form-grid{grid-template-columns:1fr}
+    .founders-grid{grid-template-columns:1fr;gap:44px}
+    .intro-text{font-size:14px;letter-spacing:.14em;white-space:normal;width:80vw}
+
+    /* home stacks vertically: logo on top, rotating content below */
+    #home{
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:90px 9vw 70px;
+    }
+    .home-logo{
+      flex:0 0 auto;
+      padding:0;
+      margin-bottom:8vh;
+    }
+    .home-logo img{width:min(62vw,340px)}
+    .home-logo .wordmark{font-size:clamp(44px,13vw,72px)}
+    .home-feature{
+      flex:0 0 auto;
+      width:100%;
+      min-height:200px;
+      justify-content:center;
+      text-align:center;
+      padding:0;
+    }
+    .feat-slide{
+      left:0;right:0;
+      text-align:center;
+    }
+    .feat-about,.feat-motto{max-width:none;margin:0 auto}
+    .feat-stats{justify-content:center}
+    .feat-dots{
+      left:50%;transform:translateX(-50%);
+      bottom:-12vh;
+    }
+    /* on mobile the footer email is hidden — util bar needs the space */
+    .footer-mail{display:none}
+    /* compact clock on mobile */
+    .city-clock .cc-city{font-size:8px;letter-spacing:.2em}
+    .city-clock .cc-time{font-size:10px}
+    .city-clock{gap:7px}
+    /* on mobile the logo never slides horizontally */
+    body.home-centering .home-logo,
+    body.home-revealed .home-logo{ transform:none; }
+    body.home-centering .home-logo img{ width:min(62vw,340px); }
+  }
+</style>
+</head>
+<body class="intro-on">
+
+<!-- ────────────── intro / first-visit cinematic -->
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="intro-bg"></div>
+  <div class="intro-warmth"></div>
+  <div class="intro-glow a"></div>
+  <div class="intro-glow b"></div>
+  <div class="intro-glow c"></div>
+</div>
+
+<!-- ────────────── static background texture -->
+<div class="bg-texture" aria-hidden="true"></div>
+<div class="smoke-layer" aria-hidden="true">
+  <canvas id="smoke"></canvas>
+</div>
+
+<!-- ────────────── ambient sound -->
+<audio id="ambiance" loop preload="auto">
+  <source src="ambiance-water.mp3" type="audio/mpeg">
+</audio>
+
+<!-- ────────────── custom cursor -->
+<div class="cursor" id="cursor" aria-hidden="true"></div>
+
+<!-- ────────────── header -->
+<header class="topbar">
+  <button class="city-clock" id="cityClock" aria-label="Local time">
+    <span class="cc-city" id="ccCity">—</span>
+    <span class="cc-dot"></span>
+    <span class="cc-time" id="ccTime">--:--</span>
+  </button>
+  <button class="menu-trigger" id="menuBtn" aria-label="Menü">
+    <span class="lines"><span></span><span></span></span>
+    <span class="label" data-i18n="menu">Menü</span>
+  </button>
+</header>
+
+<!-- ────────────── util bar -->
+<div class="util">
+  <button class="util-btn" id="audioBtn" aria-pressed="false">
+    <span class="dot"></span>
+    <span data-i18n="ambient">Atmosfer</span>
+  </button>
+  <div class="lang" role="group" aria-label="Dil">
+    <button data-lang="tr">TR</button>
+    <button data-lang="en" class="active">EN</button>
+  </div>
+</div>
+
+<!-- ────────────── nav overlay -->
+<div class="nav-overlay" id="navOverlay" aria-hidden="true">
+  <button class="nav-close" id="navClose" data-i18n="close">Kapat</button>
+  <nav>
+    <a href="#home"     data-link data-i18n="nav_home">Ana&nbsp;sayfa</a>
+    <a href="#projects" data-link data-i18n="nav_projects">Projeler</a>
+    <a href="#about"    data-link data-i18n="nav_about">Stüdyo</a>
+    <a href="#careers"  data-link data-i18n="nav_careers">Kariyer</a>
+    <a href="#contact"  data-link data-i18n="nav_contact">İletişim</a>
+  </nav>
+  <div class="nav-foot">
+    <span>Istanbul</span>
+    <span>MMXXVI</span>
+  </div>
+</div>
+
+<!-- ────────────── HOME -->
+<section class="page active" id="home" data-page>
+
+  <!-- left: logo -->
+  <div class="home-logo">
+    <img src="kortej-logo.png" alt="Kortej" />
+  </div>
+
+  <!-- right: transparent rotating content area -->
+  <div class="home-feature" id="homeFeature">
+
+    <!-- slide 1 — about -->
+    <div class="feat-slide" data-slide="0">
+      <p class="feat-about" data-i18n="feat_about">
+        Avrupa, Asya ve Afrika'da lüks yaşam, ağırlama ve çalışma mekânları tasarlayan bir mimarlık ve iç mimarlık ofisi.
+      </p>
+    </div>
+
+    <!-- slide 2 — numbers -->
+    <div class="feat-slide" data-slide="1">
+      <div class="feat-stats">
+        <div class="feat-stat">
+          <div class="num" data-count="100" data-prefix="+">+1</div>
+          <div class="label" data-i18n="feat_stat1">Tamamlanan Proje</div>
+        </div>
+        <div class="feat-stat">
+          <div class="num" data-count="35" data-prefix="+">+1</div>
+          <div class="label" data-i18n="feat_stat2">Yıllık Deneyim</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- slide 3 — motto -->
+    <div class="feat-slide" data-slide="2">
+      <p class="feat-motto" data-i18n="feat_motto">
+        Bir hayalin mekâna, mekânın deneyime dönüştüğü yolculukta önden yürürüz.
+      </p>
+    </div>
+
+    <!-- progress dots -->
+    <div class="feat-dots" id="featDots">
+      <span class="on"></span><span></span><span></span>
+    </div>
+
+  </div>
+</section>
+
+<!-- ────────────── PROJECTS -->
+<section class="page" id="projects" data-page>
+
+  <!-- category filter — fixed above the scrolling list -->
+  <div class="proj-filter" id="projFilter">
+    <button data-cat="all" class="active" data-i18n="cat_all">Tümü</button>
+    <button data-cat="O" data-i18n="cat_hotels">Oteller</button>
+    <button data-cat="K" data-i18n="cat_homes">Konutlar</button>
+    <button data-cat="R" data-i18n="cat_dining">Restoran &amp; Kafe</button>
+    <button data-cat="T" data-i18n="cat_offices">Mağazalar &amp; Ofisler</button>
+  </div>
+
+  <div class="projects-wrap" id="projectsWrap">
+    <div class="proj-intro">
+      <span class="eyebrow" data-i18n="proj_eyebrow">Seçki — 2023 / 2026</span>
+      <h1 data-i18n="proj_title">Projeler</h1>
+      <p data-i18n="proj_blurb">Her projeyi inceleme izniyle paylaşıyoruz. Erişim için kısa bir form yeterli.</p>
+      <div class="scroll-hint">
+        <span data-i18n="scroll">Kaydır</span>
+        <span class="line"></span>
+      </div>
+    </div>
+
+    <!-- rows injected by JS -->
+    <div id="projRows"></div>
+
+    <div class="proj-end">
+      <span class="eyebrow" data-i18n="proj_end_eyebrow">Devam ediyor</span>
+      <h2 data-i18n="proj_end_title">Bir sonraki kortej, hazırlanıyor.</h2>
+    </div>
+  </div>
+</section>
+
+<!-- ────────────── ABOUT -->
+<section class="page" id="about" data-page>
+  <div class="about-scroll">
+
+    <!-- studio statement -->
+    <div class="about-wrap">
+      <span class="eyebrow" data-i18n="about_eyebrow">Stüdyo</span>
+      <h1 data-i18n="about_title">Dingin mekânlar. Hassas kararlar.</h1>
+      <div class="about-rule"></div>
+      <div class="body" id="aboutBody">
+        <p data-i18n="about_p1">Kortej, 2006'dan bu yana Ankara merkezli çalışan bir mimari stüdyodur. Mimarlık, iç mimarlık, çevre tasarımı ve danışmanlık alanlarında; otuz beş yılı aşan deneyim ve üç kıtaya yayılan yüzü aşkın projeyle, farklı ölçeklerde iş üretir.</p>
+        <p data-i18n="about_p2">Bizim için mimarlık, bir mekânın inşası değil; zamanla değer kazanan ve nesiller boyu aktarılan bir yaşam deneyimidir. Her projede, onu kullanacak kişiyi anlamaya zaman ayırır; ona özgü bir bütünlük kurarız. İşlerimizin özgünlüğü kadar gizliliğine de önem veririz — çünkü bir tasarım, sahibinden başkasına ait değildir.</p>
+      </div>
+      <div class="about-scrollcue" aria-hidden="true">
+        <span data-i18n="about_founders_cue">Kurucular</span>
+        <span class="cue-line"></span>
+      </div>
+    </div>
+
+    <!-- founders -->
+    <div class="founders-wrap">
+      <span class="eyebrow" data-i18n="founders_eyebrow">Kurucular</span>
+      <div class="founders-grid">
+
+        <div class="founder">
+          <div class="founder-head">
+            <h3>Ebru Yüzgeç</h3>
+            <span class="flags">
+              <img class="flag flag-img" src="flag-tr.png" alt="Türkiye" title="Türkiye" />
+            </span>
+          </div>
+          <p class="founder-role" data-i18n="founder1_role">İç Mimar · Yarı Zamanlı Akademisyen</p>
+          <div class="founder-meta">
+            <p data-i18n="founder1_l1">Hacettepe Üniversitesi mezunu</p>
+            <p data-i18n="founder1_l2">Couture Design Group kurucusu</p>
+            <p data-i18n="founder1_l3">35 yılı aşkın deneyim</p>
+          </div>
+        </div>
+
+        <div class="founder">
+          <div class="founder-head">
+            <h3>Poyraz Eşrefoğlu</h3>
+            <span class="flags">
+              <span class="flag flag-se" title="İsveç"></span>
+              <span class="flag flag-it" title="İtalya"></span>
+              <img class="flag flag-img" src="flag-tr.png" alt="Türkiye" title="Türkiye" />
+            </span>
+          </div>
+          <p class="founder-role" data-i18n="founder2_role">Yüksek Mimar</p>
+          <div class="founder-meta">
+            <p data-i18n="founder2_l1">Politecnico di Milano &amp; Chalmers University of Technology — Yüksek Lisans mezunu</p>
+            <p data-i18n="founder2_l2">Mimarlık, İç Mimarlık, Çevre Tasarımı</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ────────────── CONTACT -->
+<section class="page" id="contact" data-page>
+  <div class="contact-wrap">
+
+    <!-- left: intro -->
+    <div class="contact-intro">
+      <span class="eyebrow" data-i18n="contact_eyebrow">İletişim</span>
+      <h1 data-i18n="contact_title">Konuşalım.</h1>
+      <p data-i18n="contact_blurb">Bir proje, bir soru ya da yalnızca bir merak — hangisi olursa olsun, sizi dinlemek isteriz. Aşağıdan bize ulaşın; kısa süre içinde dönüş yaparız.</p>
+      <div class="contact-socials">
+        <a href="https://www.instagram.com/kortejmimarlik/" target="_blank" rel="noopener">
+          <span>Instagram <em class="new-badge" data-i18n="new_badge">Yeni</em></span><span class="arrow">↗</span>
+        </a>
+        <a href="https://www.linkedin.com/company/kortej-mimarl%C4%B1k/" target="_blank" rel="noopener">
+          <span>LinkedIn <em class="new-badge" data-i18n="new_badge">Yeni</em></span><span class="arrow">↗</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- right: forms -->
+    <div class="contact-forms">
+
+      <!-- quick message -->
+      <div class="contact-block">
+        <div class="block-eyebrow" data-i18n="c_a_eye">Bir not bırakın</div>
+        <form id="quickForm" novalidate>
+          <div class="form-grid">
+            <div class="field full">
+              <label data-i18n="f_email">E-posta</label>
+              <input type="email" name="email" required />
+            </div>
+            <div class="field full">
+              <label data-i18n="f_msg">Mesaj</label>
+              <textarea name="message" required rows="3"></textarea>
+            </div>
+          </div>
+          <button class="btn" type="submit" data-i18n="send">Gönder</button>
+        </form>
+      </div>
+
+      <div class="contact-divider"></div>
+
+      <!-- services info -->
+      <div class="contact-block">
+        <div class="block-eyebrow" data-i18n="c_c_eye">Hizmetler konusunda bilgi alın</div>
+        <form id="processForm" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label data-i18n="f_name_full">Ad Soyad</label>
+              <input type="text" name="fullname" required />
+            </div>
+            <div class="field">
+              <label data-i18n="f_email">E-posta</label>
+              <input type="email" name="email" required />
+            </div>
+            <div class="field full">
+              <label data-i18n="f_proj_type">Proje türü (opsiyonel)</label>
+              <input type="text" name="type" placeholder="otel · rezidans · perakende · konut" />
+            </div>
+          </div>
+          <button class="btn" type="submit" data-i18n="send_info">Bilgi almak istiyorum</button>
+        </form>
+        <div class="block-note" data-i18n="c_c_note">Hizmetlerimizi anlatan bir e-posta ile size dönüş yaparız.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ────────────── CAREERS -->
+<section class="page" id="careers" data-page>
+  <div class="careers-wrap">
+    <div class="careers-intro">
+      <span class="eyebrow" data-i18n="car_eyebrow">Kariyer</span>
+      <h1 data-i18n="car_title">Bizimle çalışmak ister misiniz?</h1>
+      <p data-i18n="car_blurb">Kortej, ilan yayınlamak yerine doğru insanların kendini anlatmasına inanır. Mekânın sessiz disiplinine inanan tasarımcılar, mimarlar ve öğrencilerle tanışmaktan memnuniyet duyarız. Aşağıdaki formu doldurun; sizi tanıyalım.</p>
+    </div>
+
+    <form id="careerForm" class="careers-form" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label data-i18n="f_name_full">Ad Soyad</label>
+          <input type="text" name="fullname" required />
+        </div>
+        <div class="field">
+          <label data-i18n="car_role">Ünvan</label>
+          <input type="text" name="role" required />
+        </div>
+        <div class="field full">
+          <label data-i18n="f_email">E-posta</label>
+          <input type="email" name="email" required />
+        </div>
+
+        <!-- file uploads -->
+        <div class="field">
+          <label data-i18n="car_cv">CV — PDF (zorunlu)</label>
+          <label class="file-drop">
+            <input type="file" name="cv" accept="application/pdf" required />
+            <span class="file-label" data-i18n="file_choose">Dosya seç</span>
+            <span class="file-name" data-placeholder="PDF"></span>
+          </label>
+        </div>
+        <div class="field">
+          <label data-i18n="car_portfolio">Portfolyo — PDF (zorunlu)</label>
+          <label class="file-drop">
+            <input type="file" name="portfolio" accept="application/pdf" required />
+            <span class="file-label" data-i18n="file_choose">Dosya seç</span>
+            <span class="file-name" data-placeholder="PDF"></span>
+          </label>
+        </div>
+
+        <div class="field full">
+          <label data-i18n="car_sop">Niyet mektubu — en fazla 500 kelime</label>
+          <textarea name="sop" rows="5" required maxlength="3500"></textarea>
+          <div class="word-count"><span id="sopCount">0</span> / 500</div>
+        </div>
+      </div>
+      <button class="btn" type="submit" data-i18n="car_submit">Başvuruyu gönder</button>
+    </form>
+  </div>
+</section>
+
+<!-- ────────────── modal -->
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose" data-i18n="close">Kapat</button>
+    <div class="eyebrow" id="modalCode">KRT — 000</div>
+    <h2 id="modalName">—</h2>
+    <p class="sub" id="modalMeta">—</p>
+    <p class="sub" data-i18n="modal_blurb">İnceleme izni için aşağıdaki formu doldurun. Onayınızın ardından sizinle proje dosyasını paylaşırız.</p>
+
+    <form id="projForm" novalidate>
+      <div class="group-label" data-i18n="required">Zorunlu</div>
+      <div class="form-grid">
+        <div class="field">
+          <label data-i18n="f_name">İsim</label>
+          <input type="text" name="firstname" required />
+        </div>
+        <div class="field">
+          <label data-i18n="f_surname">Soy isim</label>
+          <input type="text" name="lastname" required />
+        </div>
+        <div class="field full">
+          <label data-i18n="f_email">E-posta</label>
+          <input type="email" name="email" required />
+        </div>
+      </div>
+
+      <div class="group-label" data-i18n="optional">Opsiyonel</div>
+      <div class="form-grid">
+        <div class="field">
+          <label data-i18n="f_ref">Referans</label>
+          <input type="text" name="reference" />
+        </div>
+        <div class="field">
+          <label data-i18n="f_company">Şirket</label>
+          <input type="text" name="company" />
+        </div>
+        <div class="field full">
+          <label data-i18n="f_msg">Mesaj</label>
+          <textarea name="message" rows="3"></textarea>
+        </div>
+      </div>
+
+      <button class="btn" type="submit" style="margin-top:24px" data-i18n="request">İnceleme izni iste</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" data-i18n="thanks">Teşekkürler — kısa süre içinde dönüyoruz.</div>
+
+<!-- ────────────── faint persistent contact line -->
+<a class="footer-mail" href="mailto:contact@kortejmimarlik.com">contact@kortejmimarlik.com</a>
+
+<script>
+/* ───────────────────────────── intro / first-visit */
+(function(){
+  const intro = document.getElementById('intro');
+  let seen = false;
+  try { seen = !!sessionStorage.getItem('kortej_intro_seen'); } catch(e){}
+
+  // Home reveal: logo begins centred on screen, then slides into its
+  // zone while the rotating content fades in beside it.
+  document.body.classList.add('home-centering');
+  function revealHome(){
+    document.body.classList.remove('home-centering');
+    document.body.classList.add('home-revealed');
+  }
+
+  if(seen){
+    // already shown this session — skip the cinematic intro
+    intro.classList.add('skip');
+    document.body.classList.remove('intro-on');
+    // logo sits centred briefly, then slides aside
+    setTimeout(revealHome, 1800);
+  } else {
+    try { sessionStorage.setItem('kortej_intro_seen','1'); } catch(e){}
+    // CSS: 5.5s light cycle + 2s fadeOut = 7.5s total
+    setTimeout(()=>{
+      document.body.classList.remove('intro-on');
+      document.body.classList.add('intro-done');
+    }, 5500);
+    setTimeout(()=>{
+      intro.style.display = 'none';
+    }, 7600);
+    // after intro fades, hold the centred logo ~1.6s, then reveal
+    setTimeout(revealHome, 7800);
+  }
+})();
+
+/* ───────────────────────────── data */
+const PROJECTS = [
+  // ══ OTELLER (O) — büyük & yurt dışı önce
+  { code:"S-O-U",  name:"Sarar Hotel",               loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"D-O-U",  name:"Dedepark Otel",             loc:{tr:"Eskişehir", en:"Eskişehir"}, date:"—" },
+  { code:"S-O-U",  name:"Seyrana Otel",              loc:{tr:"Avaza, Türkmenistan", en:"Avaza, Turkmenistan"}, date:"—" },
+  { code:"D-O-U",  name:"Divan Hotel",               loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"N-O-U",  name:"Nijerya Otel",              loc:{tr:"Lagos, Nijerya", en:"Lagos, Nigeria"}, date:"—" },
+  { code:"H-O-U",  name:"Hattuşa Termal Hotel",      loc:{tr:"Edremit", en:"Edremit"}, date:"2007" },
+  { code:"A-O-U",  name:"Abacı Konak Otel",          loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"A-O-U",  name:"Adalife Otel",              loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"M-O-U",  name:"Otel Miracle",              loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"A-O-U",  name:"Alara Otel",                loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"V-O-U",  name:"Volley Hotel",              loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"B-O-U",  name:"Bestekar Otel",             loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"Ö-O-U",  name:"Özgüven Otel",              loc:{tr:"—", en:"—"}, date:"—" },
+
+  // ══ KONUTLAR & VİLLALAR (K) — villalar önce
+  { code:"A-K-U",  name:"Arca Konutları / Villa",    loc:{tr:"Ankara", en:"Ankara"}, date:"2026" },
+  { code:"S-K-U",  name:"Santra Villaları",          loc:{tr:"Ankara", en:"Ankara"}, date:"2025" },
+  { code:"L-K-U",  name:"Lagos Residences",          loc:{tr:"Lagos, Nijerya", en:"Lagos, Nigeria"}, date:"—" },
+  { code:"R-K-U",  name:"Refik Bey Villa",           loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"G-K-U",  name:"Gölbaşı Villa",             loc:{tr:"Gölbaşı, Ankara", en:"Gölbaşı, Ankara"}, date:"—" },
+  { code:"E-K-U",  name:"Ertuğrul Gürel Villa",      loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"P-K-U",  name:"Park Vadi Evleri",          loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"K-K-U",  name:"Kulepark Rezidansları",     loc:{tr:"Ankara", en:"Ankara"}, date:"—" },
+
+  // ══ RESTORAN & KAFE (R) — 222 Park önce
+  { code:"2-R-U",  name:"222 Park",                  loc:{tr:"Eskişehir", en:"Eskişehir"}, date:"—" },
+  { code:"V-R-U",  name:"Vento Italiano",            loc:{tr:"Ankara", en:"Ankara"}, date:"2024" },
+  { code:"L-R-U",  name:"Laila",                     loc:{tr:"Ankara", en:"Ankara"}, date:"—" },
+  { code:"L-R-U",  name:"Laila Antalya",             loc:{tr:"Antalya", en:"Antalya"}, date:"2003" },
+  { code:"I-R-U",  name:"Ivy Summer",                loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"G-R-U",  name:"Guru's Restaurant",         loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"G-R-U",  name:"Gaga Restaurant",           loc:{tr:"Eskişehir", en:"Eskişehir"}, date:"—" },
+  { code:"M-R-U",  name:"Mellez",                    loc:{tr:"Ankara", en:"Ankara"}, date:"2025" },
+  { code:"C-R-U",  name:"Carbon",                    loc:{tr:"Ankara", en:"Ankara"}, date:"2025" },
+  { code:"N-R-U",  name:"Nami Restaurant",           loc:{tr:"Gaziosmanpaşa, Ankara", en:"Gaziosmanpaşa, Ankara"}, date:"2025" },
+  { code:"T-R-U",  name:"Tarabya Balıkçısı — Çayyolu", loc:{tr:"Çayyolu, Ankara", en:"Çayyolu, Ankara"}, date:"2025" },
+  { code:"T-R-U",  name:"Tarabya Balıkçısı — Gaziosmanpaşa", loc:{tr:"Gaziosmanpaşa, Ankara", en:"Gaziosmanpaşa, Ankara"}, date:"2023" },
+  { code:"Z-R-U",  name:"Ziyade Restaurant",         loc:{tr:"İzmir", en:"İzmir"}, date:"2021" },
+  { code:"T-R-U",  name:"Tuzu Biberi",               loc:{tr:"İzmir", en:"İzmir"}, date:"2021" },
+  { code:"O-R-U",  name:"Oiarte",                    loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"J-R-U",  name:"Jewel Restoran & Bar",      loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"B-R-U",  name:"Buda Bar",                  loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"N-R-U",  name:"Nightroom Club",            loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"L-R-U",  name:"Lux Gece Kulübü",           loc:{tr:"Ankara", en:"Ankara"}, date:"2019" },
+  { code:"P-R-U",  name:"Passage",                   loc:{tr:"Eskişehir", en:"Eskişehir"}, date:"—" },
+
+  // ══ DÜKKAN (T) — ticari / perakende / ofis
+  { code:"W-T-U",  name:"W Collection",              loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"I-T-U",  name:"IC Holding",                loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"V-T-U",  name:"V&B",                       loc:{tr:"Ankara", en:"Ankara"}, date:"2026" },
+  { code:"U-T-U",  name:"Utest Merkez Binası",       loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"S-T-U",  name:"Söğüt İnşaat Satış Ofisi",  loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"A-T-U",  name:"Aydın Köse Ofis",           loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"P-T-U",  name:"Park Oran Ofis",            loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"Y-T-U",  name:"Yelken Plaza",              loc:{tr:"—", en:"—"}, date:"—" },
+  { code:"T-T-U",  name:"Tanık Ofis",                loc:{tr:"—", en:"—"}, date:"—" }
+];
+
+/* ───────────────────────────── i18n */
+const I18N = {
+  tr:{
+    menu:"Menü", close:"Kapat", ambient:"Atmosfer",
+    nav_home:"Ana sayfa", nav_projects:"Projeler", nav_about:"Stüdyo", nav_careers:"Kariyer", nav_contact:"İletişim",
+    car_eyebrow:"Kariyer",
+    car_title:"Bizimle çalışmak ister misiniz?",
+    car_blurb:"Kortej, ilan yayınlamak yerine doğru insanların kendini anlatmasına inanır. Mekânın sessiz disiplinine inanan tasarımcılar, mimarlar ve öğrencilerle tanışmaktan memnuniyet duyarız. Aşağıdaki formu doldurun; sizi tanıyalım.",
+    car_role:"Ünvan",
+    car_cv:"CV — PDF (zorunlu)",
+    car_portfolio:"Portfolyo — PDF (zorunlu)",
+    file_choose:"Dosya seç",
+    car_sop:"Niyet mektubu — en fazla 500 kelime",
+    car_submit:"Başvuruyu gönder",
+    tag:"Mimarlık & İç Mimarlık",
+    feat_about:"Avrupa, Asya ve Afrika'da lüks yaşam, ağırlama ve çalışma mekânları tasarlayan bir mimarlık ve iç mimarlık ofisi.",
+    feat_stat1:"Tamamlanan Proje",
+    feat_stat2:"Yıllık Deneyim",
+    feat_motto:"Bir hayalin mekâna, mekânın deneyime dönüştüğü yolculukta önden yürürüz.",
+    intro_line:"Hayallerinizin etrafında bir kortej",
+    proj_eyebrow:"Seçki — 2023 / 2026", proj_title:"Projeler",
+    cat_all:"Tümü", cat_hotels:"Oteller", cat_homes:"Konutlar & Villalar", cat_dining:"Restoran & Kafe", cat_offices:"Mağazalar & Ofisler",
+    proj_blurb:"Her projeyi inceleme izniyle paylaşıyoruz. Erişim için kısa bir form yeterli.",
+    scroll:"Kaydır",
+    proj_end_eyebrow:"Devam ediyor", proj_end_title:"Bir sonraki kortej, hazırlanıyor.",
+    about_eyebrow:"Stüdyo", about_title:"Dingin mekânlar. Hassas kararlar.",
+    about_p1:"Kortej, 2006'dan bu yana Ankara merkezli çalışan bir mimari stüdyodur. Mimarlık, iç mimarlık, çevre tasarımı ve danışmanlık alanlarında; otuz beş yılı aşan deneyim ve üç kıtaya yayılan yüzü aşkın projeyle, farklı ölçeklerde iş üretir.",
+    about_p2:"Bizim için mimarlık, bir mekânın inşası değil; zamanla değer kazanan ve nesiller boyu aktarılan bir yaşam deneyimidir. Her projede, onu kullanacak kişiyi anlamaya zaman ayırır; ona özgü bir bütünlük kurarız. İşlerimizin özgünlüğü kadar gizliliğine de önem veririz — çünkü bir tasarım, sahibinden başkasına ait değildir.",
+    about_founders_cue:"Kurucular",
+    founders_eyebrow:"Kurucular",
+    founder1_role:"İç Mimar · Yarı Zamanlı Akademisyen",
+    founder1_l1:"Hacettepe Üniversitesi mezunu",
+    founder1_l2:"Couture Design Group kurucusu",
+    founder1_l3:"35 yılı aşkın deneyim",
+    founder2_role:"Yüksek Mimar",
+    founder2_l1:"Politecnico di Milano & Chalmers University of Technology — Yüksek Lisans mezunu",
+    founder2_l2:"Mimarlık, İç Mimarlık, Çevre Tasarımı",
+    contact_eyebrow:"İletişim", contact_title:"Konuşalım.",
+    contact_blurb:"Bir proje, bir soru ya da yalnızca bir merak — hangisi olursa olsun, sizi dinlemek isteriz. Aşağıdan bize ulaşın; kısa süre içinde dönüş yaparız.",
+    c_a_eye:"Bir not bırakın", c_a_title:"Bir not bırakın",
+    c_b_eye:"B — Sosyal", c_b_title:"Bizi takip edin", new_badge:"Yeni",
+    c_b_note:"Atmosferin ardındaki süreci paylaştığımız kanallar.",
+    c_c_eye:"C — Hizmetler", c_c_title:"Hizmetler konusunda bilgi alın",
+    c_c_note:"Hizmetlerimizi anlatan bir e-posta ile size dönüş yaparız.",
+    f_email:"E-posta", f_msg:"Mesaj", f_name_full:"Ad Soyad", f_proj_type:"Proje türü (opsiyonel)",
+    f_name:"İsim", f_surname:"Soy isim", f_ref:"Referans", f_company:"Şirket",
+    send:"Gönder", send_info:"Bilgi almak istiyorum",
+    request:"İnceleme izni iste", required:"Zorunlu", optional:"Opsiyonel",
+    modal_blurb:"İnceleme izni için aşağıdaki formu doldurun. Onayınızın ardından sizinle proje dosyasını paylaşırız.",
+    open_cue:"İncele",
+    thanks:"Teşekkürler — kısa süre içinde dönüyoruz."
+  },
+  en:{
+    menu:"Menu", close:"Close", ambient:"Ambient",
+    nav_home:"Home", nav_projects:"Projects", nav_about:"Studio", nav_careers:"Careers", nav_contact:"Contact",
+    car_eyebrow:"Careers",
+    car_title:"Would you like to work with us?",
+    car_blurb:"Rather than posting vacancies, Kortej believes the right people introduce themselves. We are glad to meet designers, architects and students who value the quiet discipline of space. Fill in the form below and let us get to know you.",
+    car_role:"Title",
+    car_cv:"CV — PDF (required)",
+    car_portfolio:"Portfolio — PDF (required)",
+    file_choose:"Choose file",
+    car_sop:"Statement of purpose — 500 words max",
+    car_submit:"Send application",
+    tag:"Architecture & Interior Design",
+    feat_about:"An architecture and interior design studio creating luxury living, hospitality and working spaces across Europe, Asia and Africa.",
+    feat_stat1:"Completed Projects",
+    feat_stat2:"Years of Experience",
+    feat_motto:"On the journey where a dream becomes space, and space becomes experience, we walk ahead.",
+    intro_line:"A procession around your vision",
+    proj_eyebrow:"Selection — 2023 / 2026", proj_title:"Projects",
+    cat_all:"All", cat_hotels:"Hotels", cat_homes:"Homes & Villas", cat_dining:"Restaurants & Cafés", cat_offices:"Retail & Workspaces",
+    proj_blurb:"Every project is shared by request. A short form is all it takes.",
+    scroll:"Scroll",
+    proj_end_eyebrow:"In progress", proj_end_title:"The next cortège is being prepared.",
+    about_eyebrow:"Studio", about_title:"Calm spaces. Precise decisions.",
+    about_p1:"Kortej is an Ankara-based architecture studio working since 2006. Across architecture, interior architecture, environmental design and consultancy — with more than thirty-five years of experience and over a hundred projects on three continents — it works at a wide range of scales.",
+    about_p2:"For us, architecture is not the construction of a space but a living experience — one that gains value over time and is passed down through generations. On every project we take the time to understand the person who will live in it, and shape a whole that belongs to them alone. We value the originality of our work as much as its confidentiality — because a design belongs to no one but its owner.",
+    about_founders_cue:"Founders",
+    founders_eyebrow:"Founders",
+    founder1_role:"Interior Architect · Part-time Academic",
+    founder1_l1:"Graduate of Hacettepe University",
+    founder1_l2:"Founder of Couture Design Group",
+    founder1_l3:"Over 35 years of experience",
+    founder2_role:"Master Architect",
+    founder2_l1:"Master's graduate of Politecnico di Milano & Chalmers University of Technology",
+    founder2_l2:"Architecture, Interior Architecture, Environmental Design",
+    contact_eyebrow:"Contact", contact_title:"Let's talk.",
+    contact_blurb:"A project, a question, or simply curiosity — whichever it is, we would like to hear from you. Reach us below; we will reply shortly.",
+    c_a_eye:"Leave a note", c_a_title:"Leave a note",
+    c_b_eye:"B — Social", c_b_title:"Follow along", new_badge:"New",
+    c_b_note:"Channels where we share the process behind the atmosphere.",
+    c_c_eye:"C — Services", c_c_title:"Ask about our services",
+    c_c_note:"We will reply with an email outlining our services.",
+    f_email:"Email", f_msg:"Message", f_name_full:"Full name", f_proj_type:"Project type (optional)",
+    f_name:"First name", f_surname:"Last name", f_ref:"Reference", f_company:"Company",
+    send:"Send", send_info:"Request information",
+    request:"Request review access", required:"Required", optional:"Optional",
+    modal_blurb:"Fill in the form below to request review access. We'll share the project file once approved.",
+    open_cue:"Review",
+    thanks:"Thank you — we'll be in touch shortly."
+  }
+};
+
+let lang = "en";
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    const k = el.getAttribute("data-i18n");
+    if(I18N[lang][k]) el.textContent = I18N[lang][k];
+  });
+  renderRows(); // refresh project locations
+  if(window.__refreshClock) window.__refreshClock();
+}
+
+/* ───────────────────────────── routing */
+const pages = document.querySelectorAll("[data-page]");
+function go(hash){
+  const id = (hash||"#home").replace("#","");
+  pages.forEach(p=>p.classList.toggle("active", p.id===id));
+  document.body.setAttribute("data-current", id);
+  document.querySelectorAll(".nav-overlay a").forEach(a=>{
+    a.classList.toggle("current", a.getAttribute("href")==="#"+id);
+  });
+  if(id==="projects"){ document.getElementById("projectsWrap").scrollTop = 0; }
+  closeNav();
+}
+window.addEventListener("hashchange",()=>go(location.hash));
+document.querySelectorAll("[data-link]").forEach(a=>{
+  a.addEventListener("click",e=>{
+    e.preventDefault();
+    location.hash = a.getAttribute("href");
+  });
+});
+
+/* ───────────────────────────── nav overlay */
+const navOverlay = document.getElementById("navOverlay");
+document.getElementById("menuBtn").addEventListener("click",()=>navOverlay.classList.add("open"));
+document.getElementById("navClose").addEventListener("click",closeNav);
+function closeNav(){ navOverlay.classList.remove("open"); }
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){ closeNav(); closeModal(); }
+});
+
+/* ───────────────────────────── language toggle */
+document.querySelectorAll(".lang button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".lang button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    lang = b.dataset.lang;
+    applyLang();
+  });
+});
+
+/* ───────────────────────────── custom cursor (window-level) */
+const cursor = document.getElementById("cursor");
+
+let mx = window.innerWidth/2, my = window.innerHeight/2;
+let cx = mx, cy = my;   // cursor smooth pos
+
+window.addEventListener("mousemove", e => {
+  mx = e.clientX; my = e.clientY;
+});
+document.addEventListener("mouseleave", () => cursor.classList.add("hidden"));
+document.addEventListener("mouseenter", () => cursor.classList.remove("hidden"));
+
+function tick(){
+  // cursor follows quickly
+  cx += (mx - cx) * 0.24;
+  cy += (my - cy) * 0.24;
+  cursor.style.transform = `translate(${cx}px, ${cy}px) translate(-50%, -50%)`;
+  requestAnimationFrame(tick);
+}
+tick();
+
+// hover state on interactive elements
+const HOVER_SELECTOR = 'a, button, .proj-row, .lang button, .menu-trigger, .util-btn, .socials a';
+function bindHover(){
+  document.querySelectorAll(HOVER_SELECTOR).forEach(el=>{
+    if(el.dataset.hoverBound) return;
+    el.dataset.hoverBound = "1";
+    el.addEventListener("mouseenter", ()=>cursor.classList.add("hover"));
+    el.addEventListener("mouseleave", ()=>cursor.classList.remove("hover"));
+  });
+  // hide cursor over inputs (native text cursor takes over)
+  document.querySelectorAll('input, textarea').forEach(el=>{
+    if(el.dataset.hideBound) return;
+    el.dataset.hideBound = "1";
+    el.addEventListener("mouseenter", ()=>cursor.classList.add("hidden"));
+    el.addEventListener("mouseleave", ()=>cursor.classList.remove("hidden"));
+  });
+}
+bindHover();
+
+/* ───────────────────────────── auto fullscreen attempt
+   Browsers do NOT allow auto-fullscreen on page load without user gesture.
+   We try on load (will silently fail in most browsers) and again on the
+   very first user interaction (click, keypress) — that one usually works. */
+function tryFullscreen(){
+  if(document.fullscreenElement) return;
+  const el = document.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+  if(!req) return;
+  try{
+    const p = req.call(el);
+    if(p && p.catch) p.catch(()=>{});
+  }catch(e){}
+}
+window.addEventListener("load", tryFullscreen);
+const onFirstInteract = ()=>{
+  tryFullscreen();
+  document.removeEventListener("click", onFirstInteract);
+  document.removeEventListener("keydown", onFirstInteract);
+};
+document.addEventListener("click", onFirstInteract);
+document.addEventListener("keydown", onFirstInteract);
+
+/* ───────────────────────────── ambient audio (mp3 loop) */
+const audioBtn   = document.getElementById("audioBtn");
+const ambiAudio  = document.getElementById("ambiance");
+let audioOn = true;          // default: intended ON
+let audioStarted = false;
+
+// gentle fade helper — ease-out curve so it rises softly, not linearly
+function fadeAudio(el, from, to, ms){
+  const steps = 48;
+  const dt = ms / steps;
+  let i = 0;
+  el.volume = Math.max(0, Math.min(1, from));
+  const iv = setInterval(()=>{
+    i++;
+    const t = i / steps;
+    // ease-out cubic — quick to begin, gently settling at the end
+    const eased = 1 - Math.pow(1 - t, 3);
+    const v = from + (to - from) * eased;
+    el.volume = Math.max(0, Math.min(1, v));
+    if(i >= steps){
+      clearInterval(iv);
+      if(to === 0){ try{ el.pause(); }catch(e){} }
+    }
+  }, dt);
+}
+
+const TARGET_VOL = 0.55;     // comfortable ambient level
+
+/* ── quiet OMM drone layered under the water (Web Audio) */
+let ommCtx = null, ommNodes = null;
+function startOmm(){
+  if(ommNodes) return;
+  try {
+    ommCtx = ommCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if(ommCtx.state === 'suspended') ommCtx.resume();
+  } catch(e){ return; }
+  const ctx = ommCtx;
+  const now = ctx.currentTime;
+
+  // master — very quiet, slow swell in
+  const master = ctx.createGain();
+  master.gain.value = 0;
+  master.connect(ctx.destination);
+  master.gain.linearRampToValueAtTime(0.045, now + 6);   // very low ceiling
+
+  // gentle low-pass — warm, no harsh upper harmonics
+  const lp = ctx.createBiquadFilter();
+  lp.type = "lowpass";
+  lp.frequency.value = 480;
+  lp.Q.value = 0.4;
+  lp.connect(master);
+
+  // soft sustained chord — A1 + E2 + A2, all sine
+  const freqs = [55, 82.4, 110];
+  const oscs = freqs.map((f,i)=>{
+    const o = ctx.createOscillator();
+    o.type = "sine";
+    o.frequency.value = f;
+    const g = ctx.createGain();
+    g.gain.value = 0.22 - i*0.04;
+    // slow breathing per voice
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.03 + i*0.012;
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = 0.04;
+    lfo.connect(lfoGain).connect(g.gain);
+    o.connect(g).connect(lp);
+    o.start(); lfo.start();
+    return { o, lfo };
+  });
+
+  ommNodes = { master, oscs };
+}
+function stopOmm(){
+  if(!ommNodes || !ommCtx) return;
+  const { master, oscs } = ommNodes;
+  const now = ommCtx.currentTime;
+  master.gain.cancelScheduledValues(now);
+  master.gain.setValueAtTime(master.gain.value, now);
+  master.gain.linearRampToValueAtTime(0, now + 1.5);
+  setTimeout(()=>{
+    oscs.forEach(({o,lfo})=>{ try{o.stop()}catch(e){} try{lfo.stop()}catch(e){} });
+  }, 1700);
+  ommNodes = null;
+}
+
+function startAmbiance(){
+  if(!ambiAudio) return;
+  ambiAudio.volume = 0;
+  const p = ambiAudio.play();
+  if(p && p.catch) p.catch(()=>{});
+  fadeAudio(ambiAudio, 0, TARGET_VOL, 6000);
+  startOmm();
+  audioStarted = true;
+}
+function stopAmbiance(){
+  if(!ambiAudio) return;
+  fadeAudio(ambiAudio, ambiAudio.volume, 0, 1200);
+  stopOmm();
+}
+
+audioBtn.addEventListener("click", ()=>{
+  audioOn = !audioOn;
+  audioBtn.classList.toggle("muted", !audioOn);
+  audioBtn.setAttribute("aria-pressed", audioOn);
+  if(audioOn){
+    startAmbiance();
+  } else {
+    stopAmbiance();
+  }
+});
+
+// Default visual state: ON
+audioBtn.setAttribute("aria-pressed", "true");
+
+// Try to start audio as early as possible. Most browsers block autoplay
+// until a user gesture, so we attempt immediately AND on the first of any
+// interaction event — whichever the browser allows first.
+const tryAutoAudio = () => {
+  if(audioOn && !audioStarted){
+    startAmbiance();
+    // verify it actually began; if blocked, audioStarted stays effective
+    // but playback may be paused — re-attempt on next gesture
+    if(ambiAudio && ambiAudio.paused){
+      audioStarted = false;
+    }
+  }
+};
+
+// immediate attempt (works in some browsers / when site is revisited)
+window.addEventListener("load", tryAutoAudio);
+document.addEventListener("DOMContentLoaded", tryAutoAudio);
+tryAutoAudio();
+
+// fallbacks — first real interaction of any kind
+["click","keydown","mousemove","scroll","touchstart","pointerdown"].forEach(evt=>{
+  document.addEventListener(evt, tryAutoAudio, { passive:true });
+});
+
+
+/* ───────────────────────────── projects rendering + filter */
+let projFilterCat = 'all';
+
+// the type letter of a project is the middle segment of its code (X-?-U)
+function projCategory(p){
+  const parts = p.code.split('-');
+  return parts[1] || '';
+}
+
+function renderRows(){
+  const wrap = document.getElementById("projRows");
+  // pick projects matching the active category
+  const list = PROJECTS
+    .map((p,i)=>({ p, i }))
+    .filter(({p})=> projFilterCat === 'all' || projCategory(p) === projFilterCat);
+
+  if(!list.length){
+    wrap.innerHTML = '';
+    return;
+  }
+
+  wrap.innerHTML = list.map(({p,i}, n)=>`
+    <div class="proj-row" data-idx="${i}">
+      <div class="proj-counter">${String(n+1).padStart(2,"0")} / ${String(list.length).padStart(2,"0")}</div>
+      <div class="inner" data-open="${i}">
+        <div class="code">${p.code}</div>
+        <div class="name">${p.name}</div>
+        <div class="loc">${p.loc[lang]}</div>
+        <div class="date">${p.date}</div>
+      </div>
+      <div class="open-cue">${I18N[lang].open_cue} →</div>
+    </div>
+  `).join("");
+
+  // only the .inner content opens the modal — not the whole 100vh row
+  wrap.querySelectorAll(".inner[data-open]").forEach(inner=>{
+    inner.addEventListener("click",()=>openProj(parseInt(inner.dataset.open,10)));
+  });
+  if(typeof bindHover === 'function') bindHover();
+}
+renderRows();
+
+/* ── filter buttons */
+(function(){
+  const bar = document.getElementById('projFilter');
+  if(!bar) return;
+  bar.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      bar.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      projFilterCat = btn.dataset.cat;
+      renderRows();
+      // jump back to the top of the list
+      const w = document.getElementById('projectsWrap');
+      if(w) w.scrollTop = 0;
+    });
+  });
+})();
+
+/* ───────────────────────────── modal */
+const modal = document.getElementById("modal");
+function openProj(idx){
+  const p = PROJECTS[idx];
+  document.getElementById("modalCode").textContent = p.code;
+  document.getElementById("modalName").textContent = p.name;
+  document.getElementById("modalMeta").textContent = `${p.loc[lang]} — ${p.date}`;
+  modal.classList.add("open");
+}
+function closeModal(){ modal.classList.remove("open"); }
+document.getElementById("modalClose").addEventListener("click",closeModal);
+modal.addEventListener("click",e=>{ if(e.target===modal) closeModal(); });
+
+/* ───────────────────────────── forms */
+const toast = document.getElementById("toast");
+function showToast(){
+  toast.classList.add("show");
+  setTimeout(()=>toast.classList.remove("show"), 3200);
+}
+function handleForm(form, after, extraValidate){
+  if(!form) return;
+  form.addEventListener("submit",e=>{
+    e.preventDefault();
+    // basic required check
+    const required = form.querySelectorAll("[required]");
+    let ok = true;
+    required.forEach(f=>{
+      if(!f.value.trim()){ f.style.borderBottomColor = "#a55"; ok=false; }
+      else f.style.borderBottomColor = "";
+    });
+    if(extraValidate && !extraValidate(form)) ok = false;
+    if(!ok) return;
+    showToast();
+    form.reset();
+    if(typeof form.__afterReset === 'function') form.__afterReset();
+    after && after();
+  });
+}
+handleForm(document.getElementById("quickForm"));
+handleForm(document.getElementById("processForm"));
+handleForm(document.getElementById("projForm"), closeModal);
+handleForm(document.getElementById("careerForm"), null, (form)=>{
+  // statement of purpose must be 500 words or fewer
+  const sop = form.querySelector('[name="sop"]');
+  if(!sop) return true;
+  const words = sop.value.trim() === '' ? 0 : sop.value.trim().split(/\s+/).length;
+  if(words > 500){
+    sop.style.borderBottomColor = "#a55";
+    return false;
+  }
+  return true;
+});
+
+/* ── careers: word counter + file upload display */
+(function(){
+  const form  = document.getElementById('careerForm');
+  const sop   = document.querySelector('#careerForm [name="sop"]');
+  const count = document.getElementById('sopCount');
+  if(!form) return;
+
+  // word counter for the statement of purpose
+  const LIMIT = 500;
+  function updateCount(){
+    if(!sop || !count) return;
+    const words = sop.value.trim() === '' ? 0
+      : sop.value.trim().split(/\s+/).length;
+    count.textContent = words;
+    count.parentElement.classList.toggle('over', words > LIMIT);
+  }
+  if(sop) sop.addEventListener('input', updateCount);
+
+  // file uploads — show chosen filename, mark the drop as filled
+  const drops = Array.from(form.querySelectorAll('.file-drop'));
+  function refreshDrop(drop){
+    const input = drop.querySelector('input[type="file"]');
+    const nameEl = drop.querySelector('.file-name');
+    if(!input || !nameEl) return;
+    if(input.files && input.files.length){
+      nameEl.textContent = input.files[0].name;
+      drop.classList.add('filled');
+    } else {
+      nameEl.textContent = '';
+      drop.classList.remove('filled');
+    }
+  }
+  drops.forEach(drop=>{
+    const input = drop.querySelector('input[type="file"]');
+    if(input) input.addEventListener('change', ()=>refreshDrop(drop));
+  });
+
+  // after a successful submit/reset, clear counters and filenames
+  form.__afterReset = ()=> setTimeout(()=>{
+    updateCount();
+    drops.forEach(refreshDrop);
+  }, 0);
+
+  updateCount();
+})();
+
+/* ───────────────────────────── nebula / mist clouds
+   Large, soft density gradients drifting slowly and blending into each
+   other. Kept very subtle — low opacity, tones close to the umber base,
+   so the background colour is enriched, never washed out.
+*/
+(function(){
+  const canvas = document.getElementById('smoke');   // reuse existing canvas
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  let W = 0, H = 0, dpr = 1;
+  let clouds = [];
+
+  // Palette — warm gold tones, brighter than before so the nebula is
+  // clearly visible, but still warm enough not to wash out the umber base.
+  const PALETTE = [
+    { core: [176, 146,  92] },  // soft gold
+    { core: [150, 120,  74] },  // tarnished gold
+    { core: [198, 172, 116] },  // light champagne
+    { core: [120,  96,  64] },  // warm umber-bronze
+    { core: [160, 146, 122] },  // warm grey mist
+  ];
+
+  function init(){
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    W = canvas.clientWidth  = window.innerWidth;
+    H = canvas.clientHeight = window.innerHeight;
+    canvas.width  = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+
+    const COUNT = 8;
+    clouds = [];
+    for(let i = 0; i < COUNT; i++){
+      const pal = PALETTE[i % PALETTE.length];
+      clouds.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.10,
+        vy: (Math.random() - 0.5) * 0.07,
+        r: (0.30 + Math.random() * 0.50) * Math.min(W, H),
+        // base opacity — visible, but kept moderate for elegance
+        baseAlpha: 0.11 + Math.random() * 0.10,
+        bPhase: Math.random() * Math.PI * 2,
+        bSpeed: 0.0006 + Math.random() * 0.0011,
+        wPhase: Math.random() * Math.PI * 2,
+        wSpeed: 0.0004 + Math.random() * 0.0008,
+        core: pal.core
+      });
+    }
+  }
+
+  init();
+  window.addEventListener('resize', init);
+
+  function tick(){
+    // fully clear each frame — no additive build-up
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, W, H);
+
+    // soft-light keeps clouds tinting the base without blowing it out
+    ctx.globalCompositeOperation = 'lighter';
+
+    for(let i = 0; i < clouds.length; i++){
+      const c = clouds[i];
+
+      c.bPhase += c.bSpeed;
+      const breath = Math.sin(c.bPhase) * 0.5 + 0.5;        // 0..1
+      const alpha  = c.baseAlpha * (0.6 + breath * 0.55);
+      const radius = c.r * (0.85 + breath * 0.22);
+
+      c.wPhase += c.wSpeed;
+      c.x += c.vx + Math.cos(c.wPhase) * 0.04;
+      c.y += c.vy + Math.sin(c.wPhase * 1.3) * 0.03;
+
+      const m = c.r * 0.5;
+      if(c.x < -m)    c.x = W + m;
+      if(c.x > W + m) c.x = -m;
+      if(c.y < -m)    c.y = H + m;
+      if(c.y > H + m) c.y = -m;
+
+      const k = c.core;
+      const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, radius);
+      g.addColorStop(0,    `rgba(${k[0]},${k[1]},${k[2]},${alpha})`);
+      g.addColorStop(0.45, `rgba(${k[0]},${k[1]},${k[2]},${alpha * 0.38})`);
+      g.addColorStop(1,    `rgba(${k[0]},${k[1]},${k[2]},0)`);
+
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.globalCompositeOperation = 'source-over';
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+
+/* ───────────────────────────── home feature gallery
+   Three slides cross-fade automatically, 10s each. When the numbers
+   slide appears, the counters animate from 1 up to their target.
+*/
+(function(){
+  const feature = document.getElementById('homeFeature');
+  if(!feature) return;
+  const slides = Array.from(feature.querySelectorAll('.feat-slide'));
+  const dots   = Array.from(document.querySelectorAll('#featDots span'));
+  if(!slides.length) return;
+
+  const HOLD = 10000;   // ms each slide stays
+  let idx = 0;
+  let timer = null;
+
+  // ── counter animation
+  function runCounters(slide){
+    const nums = slide.querySelectorAll('[data-count]');
+    nums.forEach(el=>{
+      const target = parseInt(el.getAttribute('data-count'), 10);
+      const prefix = el.getAttribute('data-prefix') || '';
+      const dur = 2500;            // ~2.5s
+      const start = performance.now();
+      function frame(now){
+        const t = Math.min(1, (now - start) / dur);
+        // ease-out cubic — slows gently toward the end
+        const eased = 1 - Math.pow(1 - t, 3);
+        const val = Math.round(1 + (target - 1) * eased);
+        el.textContent = prefix + val;
+        if(t < 1) requestAnimationFrame(frame);
+        else el.textContent = prefix + target;
+      }
+      el.textContent = prefix + '1';
+      requestAnimationFrame(frame);
+    });
+  }
+
+  function show(n){
+    slides.forEach((s,i)=> s.classList.toggle('show', i === n));
+    dots.forEach((d,i)=> d.classList.toggle('on', i === n));
+    // if this slide has counters, animate them
+    if(slides[n].querySelector('[data-count]')){
+      runCounters(slides[n]);
+    }
+  }
+
+  function next(){
+    idx = (idx + 1) % slides.length;
+    show(idx);
+  }
+
+  function startCycle(){
+    clearInterval(timer);
+    timer = setInterval(next, HOLD);
+  }
+
+  // first slide visible immediately (but the cycle waits for reveal)
+  show(0);
+
+  // Don't start the 10s rotation until the home content is actually
+  // revealed — otherwise slide 1 could elapse while it's still hidden.
+  function beginWhenRevealed(){
+    if(document.body.classList.contains('home-revealed')){
+      startCycle();
+    } else {
+      setTimeout(beginWhenRevealed, 300);
+    }
+  }
+  beginWhenRevealed();
+
+  // pause rotation while the tab is hidden, resume on return
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden) clearInterval(timer);
+    else if(document.body.classList.contains('home-revealed')) startCycle();
+  });
+})();
+
+/* ───────────────────────────── city clock
+   A small clock in the header. Tap to cycle through cities.
+   First entry follows the visitor's own timezone.
+*/
+(function(){
+  const elCity = document.getElementById('ccCity');
+  const elTime = document.getElementById('ccTime');
+  const btn    = document.getElementById('cityClock');
+  if(!elCity || !elTime || !btn) return;
+
+  // IANA timezones — first is the visitor's local zone
+  const CITIES = [
+    { label:{tr:"Konumunuz", en:"Local"}, tz:null },              // visitor's own
+    { label:{tr:"İstanbul",  en:"Istanbul"}, tz:"Europe/Istanbul" },
+    { label:{tr:"Londra",    en:"London"},   tz:"Europe/London" },
+    { label:{tr:"Lagos",     en:"Lagos"},    tz:"Africa/Lagos" },
+    { label:{tr:"Aşkabat",   en:"Ashgabat"}, tz:"Asia/Ashgabat" }
+  ];
+  let ci = 0;
+
+  function fmt(tz){
+    const opts = { hour:'2-digit', minute:'2-digit', hour12:false };
+    if(tz) opts.timeZone = tz;
+    try {
+      return new Intl.DateTimeFormat('en-GB', opts).format(new Date());
+    } catch(e){
+      return new Intl.DateTimeFormat('en-GB',
+        { hour:'2-digit', minute:'2-digit', hour12:false }).format(new Date());
+    }
+  }
+
+  function render(){
+    const c = CITIES[ci];
+    const langKey = (typeof lang !== 'undefined') ? lang : 'en';
+    elCity.textContent = c.label[langKey] || c.label.en;
+    elTime.textContent = fmt(c.tz);
+  }
+
+  btn.addEventListener('click', ()=>{
+    ci = (ci + 1) % CITIES.length;
+    render();
+  });
+
+  render();
+  setInterval(render, 1000 * 20);   // refresh every 20s — minutes only
+
+  // expose so language switch can refresh the city label
+  window.__refreshClock = render;
+})();
+
+go(location.hash || "#home");
+applyLang();
+</script>
+</body>
+</html>

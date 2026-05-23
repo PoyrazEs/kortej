@@ -29,7 +29,7 @@
   }
 
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
+  html,body{height:100%;overflow-x:hidden}
   body{
     background:var(--umber);
     color:var(--linen);
@@ -452,14 +452,14 @@
   /* ── PROJECTS */
   #projects{overflow:hidden}
   .projects-wrap{
-    height:100vh;width:100vw;
+    height:100vh;height:100dvh;width:100vw;
     overflow-y:auto;scroll-snap-type:y mandatory;
     scrollbar-width:none;
   }
   .projects-wrap::-webkit-scrollbar{display:none}
 
   .proj-intro,.proj-row,.proj-end{
-    height:100vh;scroll-snap-align:start;scroll-snap-stop:always;
+    height:100vh;height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;
     display:flex;align-items:center;justify-content:center;
     padding:0 8vw;position:relative;
   }
@@ -569,7 +569,7 @@
   }
   /* studio statement — first full screen */
   .about-wrap{
-    min-height:100vh;
+    min-height:100vh;min-height:100dvh;
     scroll-snap-align:start;scroll-snap-stop:always;
     max-width:1100px;margin:0 auto;
     display:flex;flex-direction:column;justify-content:center;
@@ -614,7 +614,7 @@
 
   /* founders — second screen */
   .founders-wrap{
-    min-height:100vh;
+    min-height:100vh;min-height:100dvh;
     scroll-snap-align:start;scroll-snap-stop:always;
     max-width:1100px;margin:0 auto;
     display:flex;flex-direction:column;justify-content:center;
@@ -867,6 +867,7 @@
   .modal{
     position:fixed;inset:0;z-index:120;
     display:flex;align-items:center;justify-content:center;
+    padding:24px;
     background:rgba(20,16,14,0.78);
     backdrop-filter:blur(28px) saturate(140%);
     -webkit-backdrop-filter:blur(28px) saturate(140%);
@@ -876,7 +877,7 @@
   }
   .modal.open{opacity:1;pointer-events:auto}
   .modal-card{
-    width:100%;max-width:560px;max-height:90vh;overflow-y:auto;
+    width:100%;max-width:560px;max-height:90vh;max-height:90dvh;overflow-y:auto;
     background:rgba(42,32,24,.55);
     border:1px solid var(--line-strong);
     padding:40px;border-radius:2px;
@@ -1037,17 +1038,46 @@
   body.intro-done .topbar{animation-delay:.4s}
   body.intro-done .util{animation-delay:.6s}
 
-  /* ── responsive */
+  /* ════════════════════════════ responsive ════════════════════════════
+     Layers: ≤1024 tablet · ≤880 small-tablet/large-phone · ≤560 phone
+             + short-landscape height guard
+  */
+
+  /* ── TABLET ─────────────────────────────────────────── ≤1024px */
+  @media (max-width:1024px){
+    .topbar{padding:20px 26px}
+    .util{padding:0 26px}
+    .proj-row .inner{grid-template-columns:96px 1fr 1fr;gap:32px}
+    .proj-row .inner .date{grid-column:3;text-align:right}
+    .proj-counter{display:none}
+    .proj-row .name{font-size:clamp(38px,5.4vw,68px)}
+    .about-wrap{max-width:none;padding:120px 6vw 90px}
+    .founders-wrap{max-width:none;padding:108px 6vw 108px}
+    .careers-wrap{grid-template-columns:0.7fr 1fr;gap:5vw}
+    .contact-wrap{grid-template-columns:0.72fr 1fr;gap:5vw}
+    body.home-centering .home-logo{transform:translateX(14vw)}
+  }
+
+  /* ── SMALL TABLET / LARGE PHONE ─────────────────────── ≤880px */
   @media (max-width:880px){
     .topbar{padding:18px 22px}
     .util{padding:0 22px}
-    .proj-row .inner{grid-template-columns:80px 1fr;gap:14px;padding-bottom:24px}
-    .proj-row .inner .loc,.proj-row .inner .date{grid-column:2}
-    .proj-row .date{text-align:left}
+
+    /* projects rows — stacked, code beside name then loc + date below */
+    .proj-row .inner{
+      grid-template-columns:72px 1fr;gap:6px 16px;padding-bottom:24px;
+    }
+    .proj-row .code{grid-column:1;grid-row:1}
+    .proj-row .name{grid-column:2;grid-row:1;font-size:clamp(34px,8vw,56px)}
+    .proj-row .inner .loc{grid-column:2;grid-row:2}
+    .proj-row .inner .date{grid-column:2;grid-row:3;text-align:left}
     .proj-counter{display:none}
+    .proj-row .open-cue{display:none}
+
     .form-grid{grid-template-columns:1fr}
+    .careers-form .form-grid{grid-template-columns:1fr}
     .careers-wrap{grid-template-columns:1fr;gap:48px}
-    .contact-wrap{grid-template-columns:1fr;gap:48px}
+    .contact-wrap{grid-template-columns:1fr;gap:44px}
     .contact-block .form-grid{grid-template-columns:1fr}
     .founders-grid{grid-template-columns:1fr;gap:44px}
     .intro-text{font-size:14px;letter-spacing:.14em;white-space:normal;width:80vw}
@@ -1057,12 +1087,12 @@
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      padding:90px 9vw 70px;
+      padding:96px 9vw 80px;
     }
     .home-logo{
       flex:0 0 auto;
       padding:0;
-      margin-bottom:8vh;
+      margin-bottom:7vh;
     }
     .home-logo img{width:min(62vw,340px)}
     .home-logo .wordmark{font-size:clamp(44px,13vw,72px)}
@@ -1084,16 +1114,97 @@
       left:50%;transform:translateX(-50%);
       bottom:-12vh;
     }
-    /* on mobile the footer email is hidden — util bar needs the space */
     .footer-mail{display:none}
-    /* compact clock on mobile */
     .city-clock .cc-city{font-size:8px;letter-spacing:.2em}
     .city-clock .cc-time{font-size:10px}
     .city-clock{gap:7px}
-    /* on mobile the logo never slides horizontally */
     body.home-centering .home-logo,
     body.home-revealed .home-logo{ transform:none; }
     body.home-centering .home-logo img{ width:min(62vw,340px); }
+
+    .about-wrap{padding:110px 7vw 96px;gap:26px}
+    .founders-wrap{padding:96px 7vw 96px;gap:40px}
+    .about-wrap h1{font-size:clamp(32px,6.6vw,52px)}
+    #careers{padding:104px 7vw 90px;align-items:flex-start}
+    .careers-intro h1{font-size:clamp(34px,5.2vw,52px)}
+    #contact{padding:104px 7vw 90px;align-items:flex-start}
+    .nav-overlay a{font-size:clamp(26px,5.4vw,40px)}
+    .proj-filter{top:72px}
+  }
+
+  /* ── PHONE ──────────────────────────────────────────── ≤560px */
+  @media (max-width:560px){
+    .topbar{padding:16px 18px}
+    .util{padding:0 18px;bottom:18px}
+
+    .intro-glow{width:90vmin;height:90vmin}
+
+    #home{padding:88px 7vw 76px}
+    .home-logo img{width:min(72vw,300px)}
+    .home-logo{margin-bottom:6vh}
+    .feat-about{font-size:16px;line-height:1.6}
+    .feat-motto{font-size:17px;line-height:1.55}
+    .feat-stat .num{font-size:clamp(40px,15vw,58px)}
+    .feat-stat .label{font-size:9px;letter-spacing:.2em}
+    .feat-stats{gap:28px}
+    .feat-dots{bottom:-13vh}
+
+    .proj-intro,.proj-row,.proj-end{padding:0 7vw}
+    .proj-row .inner{grid-template-columns:58px 1fr;gap:5px 12px}
+    .proj-row .name{font-size:clamp(28px,9vw,42px);line-height:1}
+    .proj-row .code{font-size:9px;letter-spacing:.28em}
+    .proj-row .loc{font-size:15px}
+    .proj-row .date{font-size:11px;letter-spacing:.22em}
+    .proj-intro h1{font-size:clamp(44px,16vw,72px)}
+    .proj-end h2{font-size:clamp(26px,7vw,38px)}
+    .proj-filter{top:64px;gap:5px;width:90vw}
+    .proj-filter button{font-size:8px;letter-spacing:.16em;padding:8px 11px}
+
+    .about-wrap{padding:100px 7vw 88px}
+    .about-wrap h1{font-size:clamp(30px,8vw,44px)}
+    .about-wrap .body{font-size:15px;line-height:1.75}
+    .about-wrap .body p:first-child::first-letter{font-size:64px;margin:2px 10px 0 0}
+    .founders-wrap{padding:88px 7vw 88px}
+    .founder-head h3{font-size:clamp(24px,7vw,32px)}
+    .founder-meta{font-size:14px}
+    .about-scrollcue{left:7vw;bottom:42px}
+
+    #careers{padding:96px 7vw 84px}
+    .careers-intro h1{font-size:clamp(32px,8.5vw,48px)}
+    .careers-intro p{font-size:15px}
+    .careers-form .form-grid{gap:24px}
+    .file-drop{padding:12px 13px;gap:11px}
+    .file-drop .file-label{font-size:8px;padding:6px 11px;letter-spacing:.18em}
+    .file-drop .file-name{font-size:12px}
+
+    #contact{padding:96px 7vw 84px}
+    .contact-intro h1{font-size:clamp(34px,9vw,52px)}
+    .contact-intro p{font-size:15px}
+    .contact-socials a{font-size:17px}
+    .contact-block .form-grid{gap:22px}
+
+    .nav-overlay a{font-size:clamp(24px,7vw,34px);padding:5px 18px}
+    .nav-overlay a.current::before,
+    .nav-overlay a.current::after{width:12px}
+    .nav-overlay a.current::before{left:-2px}
+    .nav-overlay a.current::after{right:-2px}
+
+    /* 16px inputs stop iOS auto-zoom on focus */
+    .field input,.field textarea{font-size:16px;padding:11px 0}
+    .btn{padding:13px 22px;font-size:10px}
+
+    .modal-card{padding:32px 24px}
+    .eyebrow{letter-spacing:.34em}
+  }
+
+  /* ── SHORT / LANDSCAPE PHONE ─────────── height guard */
+  @media (max-height:560px) and (max-width:920px){
+    #home{padding:70px 7vw 60px}
+    .home-logo{margin-bottom:4vh}
+    .home-logo img{width:min(34vw,260px)}
+    .about-wrap,.founders-wrap{min-height:auto;padding-top:90px;padding-bottom:70px}
+    #careers,#contact{align-items:flex-start}
+    .feat-dots{bottom:-16vh}
   }
 </style>
 </head>

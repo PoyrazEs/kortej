@@ -2292,45 +2292,69 @@ handleForm(document.getElementById("careerForm"),  "Kariyer Başvurusu", null, (
   updateCount();
 })();
 
-/* ───────────────────────────── nebula / mist clouds — optimised
-   The nebula is the heaviest visual on the page, so it carries a few
-   built-in optimisations that apply to EVERY device (the look is
-   unchanged — these are pure efficiency wins):
-     · capped at ~30fps — the clouds drift so slowly that 30 and 60 fps
-       look identical, but 30 halves the work
-     · radial-gradient objects are cached per cloud and only rebuilt when
-       the cloud's breathing noticeably changes its size/alpha, instead
-       of allocating a fresh gradient every single frame
-     · 6 clouds instead of 8 — visually indistinguishable, lighter
-     · paused entirely while the browser tab is hidden
-   On top of that, a light safety net: if the page is *genuinely* slow
-   for a sustained stretch (a weak laptop), the nebula — and only the
-   nebula — switches off. Blur, grain and every other effect always stay.
+/* ───────────────────────────── nebula / mist clouds — static
+   The nebula is drawn ONCE and never animated, so it costs zero ongoing
+   CPU/GPU — no frame loop at all. To keep the page feeling alive despite
+   being static, one of three hand-tuned cloud "profiles" is chosen at
+   random on each visit, so the background composition differs slightly
+   every time the site is opened. Opacity is a touch higher than the old
+   animated version, since a static image can carry more presence without
+   ever causing a stutter.
 */
 (function(){
   const canvas = document.getElementById('smoke');
   if(!canvas) return;
   const ctx = canvas.getContext('2d');
 
-  const reduceMotion = window.matchMedia &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  let W = 0, H = 0, dpr = 1;
-  let clouds = [];
-  let running = true;
-  let nebulaOff = false;
-
+  // warm palette — gold / champagne / bronze tones over the umber base
   const PALETTE = [
-    { core: [176, 146,  92] },
-    { core: [150, 120,  74] },
-    { core: [198, 172, 116] },
-    { core: [120,  96,  64] },
-    { core: [160, 146, 122] },
+    [176, 146,  92],   // soft gold
+    [150, 120,  74],   // tarnished gold
+    [198, 172, 116],   // light champagne
+    [120,  96,  64],   // warm umber-bronze
+    [160, 146, 122],   // warm grey mist
   ];
 
-  const CLOUD_COUNT = 6;
+  /* Three composition profiles. Each cloud is positioned in RELATIVE
+     coordinates (0..1 of width/height) so it scales to any screen.
+       fx,fy  — focal position (fraction of W/H)
+       fr     — radius (fraction of the smaller screen dimension)
+       a      — peak opacity
+       p      — palette index
+  */
+  const PROFILES = [
+    // profile 1 — diagonal drift, glow gathered upper-left & lower-right
+    [
+      {fx:0.22, fy:0.28, fr:0.62, a:0.22, p:0},
+      {fx:0.78, fy:0.72, fr:0.70, a:0.20, p:2},
+      {fx:0.55, fy:0.15, fr:0.45, a:0.16, p:4},
+      {fx:0.12, fy:0.82, fr:0.50, a:0.15, p:3},
+      {fx:0.88, fy:0.30, fr:0.40, a:0.14, p:1},
+    ],
+    // profile 2 — centred bloom, soft halo around the middle
+    [
+      {fx:0.50, fy:0.46, fr:0.66, a:0.23, p:2},
+      {fx:0.20, fy:0.35, fr:0.48, a:0.16, p:0},
+      {fx:0.80, fy:0.55, fr:0.50, a:0.16, p:1},
+      {fx:0.62, fy:0.85, fr:0.46, a:0.14, p:3},
+      {fx:0.35, fy:0.78, fr:0.42, a:0.13, p:4},
+    ],
+    // profile 3 — horizon band, weight low and wide
+    [
+      {fx:0.30, fy:0.70, fr:0.64, a:0.22, p:0},
+      {fx:0.72, fy:0.66, fr:0.62, a:0.21, p:2},
+      {fx:0.50, fy:0.88, fr:0.52, a:0.16, p:3},
+      {fx:0.15, fy:0.40, fr:0.44, a:0.14, p:1},
+      {fx:0.85, fy:0.32, fr:0.46, a:0.14, p:4},
+    ],
+  ];
 
-  function init(){
+  // pick a profile at random for this visit
+  const profile = PROFILES[Math.floor(Math.random() * PROFILES.length)];
+
+  let W = 0, H = 0, dpr = 1;
+
+  function draw(){
     dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     W = canvas.clientWidth  = window.innerWidth;
     H = canvas.clientHeight = window.innerHeight;
@@ -2338,142 +2362,38 @@ handleForm(document.getElementById("careerForm"),  "Kariyer Başvurusu", null, (
     canvas.height = Math.floor(H * dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
 
-    clouds = [];
-    for(let i = 0; i < CLOUD_COUNT; i++){
-      const pal = PALETTE[i % PALETTE.length];
-      clouds.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.10,
-        vy: (Math.random() - 0.5) * 0.07,
-        r: (0.30 + Math.random() * 0.50) * Math.min(W, H),
-        baseAlpha: 0.11 + Math.random() * 0.10,
-        bPhase: Math.random() * Math.PI * 2,
-        bSpeed: 0.0006 + Math.random() * 0.0011,
-        wPhase: Math.random() * Math.PI * 2,
-        wSpeed: 0.0004 + Math.random() * 0.0008,
-        core: pal.core,
-        // cached gradient + the breath value it was built at
-        grad: null,
-        gradBreath: -1
-      });
-    }
-  }
-
-  function drawFrame(){
     ctx.globalCompositeOperation = 'source-over';
     ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
 
-    for(let i = 0; i < clouds.length; i++){
-      const c = clouds[i];
-      c.bPhase += c.bSpeed;
-      const breath = Math.sin(c.bPhase) * 0.5 + 0.5;
-      const alpha  = c.baseAlpha * (0.6 + breath * 0.55);
-      const radius = c.r * (0.85 + breath * 0.22);
+    const minDim = Math.min(W, H);
+    for(let i = 0; i < profile.length; i++){
+      const c = profile[i];
+      const x = c.fx * W;
+      const y = c.fy * H;
+      const r = c.fr * minDim;
+      const k = PALETTE[c.p];
 
-      c.wPhase += c.wSpeed;
-      c.x += c.vx + Math.cos(c.wPhase) * 0.04;
-      c.y += c.vy + Math.sin(c.wPhase * 1.3) * 0.03;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0,    `rgba(${k[0]},${k[1]},${k[2]},${c.a})`);
+      g.addColorStop(0.45, `rgba(${k[0]},${k[1]},${k[2]},${c.a * 0.40})`);
+      g.addColorStop(1,    `rgba(${k[0]},${k[1]},${k[2]},0)`);
 
-      const m = c.r * 0.5;
-      if(c.x < -m)    c.x = W + m;
-      if(c.x > W + m) c.x = -m;
-      if(c.y < -m)    c.y = H + m;
-      if(c.y > H + m) c.y = -m;
-
-      // rebuild the gradient only when breathing has moved enough to matter
-      // (~3% steps) — otherwise reuse the cached one. Big allocation saving.
-      if(c.grad === null || Math.abs(breath - c.gradBreath) > 0.03){
-        const k = c.core;
-        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-        g.addColorStop(0,    `rgba(${k[0]},${k[1]},${k[2]},${alpha})`);
-        g.addColorStop(0.45, `rgba(${k[0]},${k[1]},${k[2]},${alpha * 0.38})`);
-        g.addColorStop(1,    `rgba(${k[0]},${k[1]},${k[2]},0)`);
-        c.grad = g;
-        c.gradBreath = breath;
-        c.gradRadius = radius;
-      }
-
-      // translate so the cached (origin-based) gradient lands on the cloud
-      ctx.save();
-      ctx.translate(c.x, c.y);
-      ctx.fillStyle = c.grad;
+      ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(0, 0, c.gradRadius, 0, Math.PI * 2);
+      ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     }
     ctx.globalCompositeOperation = 'source-over';
   }
 
-  /* frame loop — capped at ~30fps */
-  const FRAME_MS = 1000 / 30;
-  let lastDraw = 0;
-  function tick(now){
-    if(!running) return;
-    requestAnimationFrame(tick);
-    if(now - lastDraw < FRAME_MS) return;   // throttle to 30fps
-    lastDraw = now;
-    drawFrame();
-    if(monitoring) monitorFrame(now);
-  }
-
-  function stopNebula(){
-    nebulaOff = true;
-    running = false;
-    ctx.clearRect(0, 0, W, H);
-  }
-
-  /* ── light safety net ───────────────────────────────────────────────
-     We don't grade the device up-front any more. We just watch the
-     frame loop for a sustained run of slow frames; only then — when the
-     machine clearly can't cope — do we switch the nebula off. Nothing
-     else is ever touched. */
-  let monitoring = true;
-  let slowStreak = 0;
-  let monStart = 0;
-  let monFrames = 0;
-  let monPrev = 0;
-  function monitorFrame(now){
-    // ignore the first second (load / intro settling)
-    if(monStart === 0){ monStart = now; monPrev = now; return; }
-    if(now - monStart < 1000){ monPrev = now; return; }
-
-    const delta = now - monPrev;
-    monPrev = now;
-    monFrames++;
-
-    // a frame that took much longer than our 30fps budget is "slow"
-    // (>55ms ~= under 18fps). Count consecutive slow frames.
-    if(delta > 55) slowStreak++;
-    else slowStreak = Math.max(0, slowStreak - 1);
-
-    // ~90 bad frames in a row of genuine stutter -> give up the nebula
-    if(slowStreak > 90){
-      monitoring = false;
-      stopNebula();
-      return;
-    }
-    // stop monitoring after ~8s — if it was fine that long, it's fine
-    if(now - monStart > 8000) monitoring = false;
-  }
-
-  window.addEventListener('resize', ()=>{ if(running) init(); });
-
-  document.addEventListener('visibilitychange', ()=>{
-    if(document.hidden){ running = false; }
-    else if(!nebulaOff){ running = true; lastDraw = 0; requestAnimationFrame(tick); }
+  draw();
+  // redraw only on resize — still no animation loop, so zero idle cost
+  let resizeTimer = null;
+  window.addEventListener('resize', ()=>{
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(draw, 150);
   });
-
-  // OS "reduce motion" -> respect it, nebula stays off
-  if(reduceMotion){
-    init();
-    stopNebula();
-  } else {
-    init();
-    requestAnimationFrame(tick);
-  }
 })();
 
 /* ───────────────────────────── home feature gallery

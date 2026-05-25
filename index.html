@@ -71,13 +71,18 @@
   body::before{
     content:"";
     position:fixed;inset:0;pointer-events:none;z-index:1;
+    /* vignette — darkens the corners. Previously this used
+       mix-blend-mode:multiply, which forces the browser to do a
+       per-pixel multiplicative blend with every layer beneath it on
+       each paint (costly on the home page, where the most layers
+       stack up). A plain dark radial gradient drawn normally gives the
+       same corner falloff with none of that blend cost. */
     background:
       radial-gradient(120% 120% at 50% 48%,
         transparent 0%,
         transparent 48%,
-        rgba(0,0,0,.32) 78%,
-        rgba(0,0,0,.62) 100%);
-    mix-blend-mode:multiply;
+        rgba(8,6,5,.42) 78%,
+        rgba(6,4,3,.72) 100%);
   }
   body::after{
     content:"";
@@ -413,14 +418,14 @@
     left:4vw;
     right:-22vw;
     top:50%;
-    transform:translateY(calc(-50% + 14px));
+    transform:translate3d(0,calc(-50% + 14px),0);
     opacity:0;
     transition:opacity 1.4s var(--ease), transform 1.4s var(--ease);
     pointer-events:none;
   }
   .feat-slide.show{
     opacity:1;
-    transform:translateY(-50%);
+    transform:translate3d(0,-50%,0);
     pointer-events:auto;
   }
 
@@ -1672,8 +1677,9 @@
   }
 
   if(seen){
-    // already shown this session — skip the cinematic intro
-    intro.classList.add('skip');
+    // already shown this session — skip the cinematic intro entirely.
+    // Remove it from the DOM so its glow animations never even start.
+    intro.remove();
     document.body.classList.remove('intro-on');
     // logo sits centred briefly, then slides aside
     setTimeout(revealHome, 1800);
@@ -1685,7 +1691,10 @@
       document.body.classList.add('intro-done');
     }, 5500);
     setTimeout(()=>{
-      intro.style.display = 'none';
+      // fully delete the intro — not just display:none. A hidden node can
+      // still keep its child glow animations scheduled on some browsers,
+      // quietly burning frames behind the home page. Removing it is final.
+      intro.remove();
     }, 7600);
     // after intro fades, hold the centred logo ~1.6s, then reveal
     setTimeout(revealHome, 7800);

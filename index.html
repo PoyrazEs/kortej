@@ -1892,6 +1892,7 @@ let cx = mx, cy = my;   // cursor smooth pos
 
 window.addEventListener("mousemove", e => {
   mx = e.clientX; my = e.clientY;
+  wakeCursor();
 });
 document.addEventListener("mouseleave", () => cursor.classList.add("hidden"));
 document.addEventListener("mouseenter", () => cursor.classList.remove("hidden"));
@@ -1900,10 +1901,25 @@ function tick(){
   // cursor follows quickly
   cx += (mx - cx) * 0.24;
   cy += (my - cy) * 0.24;
-  cursor.style.transform = `translate(${cx}px, ${cy}px) translate(-50%, -50%)`;
-  requestAnimationFrame(tick);
+  // round to whole pixels — avoids sub-pixel compositing work each frame
+  cursor.style.transform =
+    `translate(${Math.round(cx)}px, ${Math.round(cy)}px) translate(-50%, -50%)`;
+
+  // keep animating only until the cursor has caught up with the pointer;
+  // once it's settled, stop the loop entirely (a still mouse costs nothing)
+  if(Math.abs(mx - cx) > 0.1 || Math.abs(my - cy) > 0.1){
+    requestAnimationFrame(tick);
+  } else {
+    cursorRunning = false;
+  }
 }
-tick();
+let cursorRunning = false;
+function wakeCursor(){
+  if(!cursorRunning){
+    cursorRunning = true;
+    requestAnimationFrame(tick);
+  }
+}
 
 // hover state on interactive elements
 const HOVER_SELECTOR = 'a, button, .proj-row, .lang button, .menu-trigger, .util-btn, .socials a';

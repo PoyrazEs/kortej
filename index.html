@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>Kortej</title>
 <meta name="description" content="Kortej" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Jost:wght@200;300;400;500&display=swap&subset=latin-ext" rel="stylesheet">
@@ -77,8 +81,11 @@
   }
   body::after{
     content:"";
-    position:fixed;inset:0;pointer-events:none;z-index:2;opacity:.07;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    position:fixed;inset:0;pointer-events:none;z-index:2;opacity:.06;
+    /* film grain — single-octave noise: the browser rasterises this SVG
+       once then just tiles it, and one octave is markedly cheaper to
+       generate than two while looking practically identical at 6% opacity */
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
 
   ::selection{background:var(--gold);color:var(--umber)}
@@ -194,8 +201,7 @@
     text-transform:uppercase;
     padding:10px 14px;border-radius:999px;
     cursor:pointer;
-    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-    background:var(--glass);
+    background:rgba(28,22,18,.82);
     transition:all .35s var(--ease);
     display:inline-flex;align-items:center;gap:10px;
   }
@@ -209,7 +215,7 @@
   .util-btn.muted .dot{background:rgba(238,232,226,.35);box-shadow:none;animation:none}
   @keyframes pulse{0%,100%{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
 
-  .lang{display:flex;gap:0;border:1px solid var(--line);border-radius:999px;overflow:hidden;backdrop-filter:blur(12px);background:var(--glass)}
+  .lang{display:flex;gap:0;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(28,22,18,.82)}
   .lang button{
     background:transparent;border:0;color:var(--linen);
     font-family:var(--sans);font-size:10px;letter-spacing:.3em;text-transform:uppercase;
@@ -288,12 +294,15 @@
   #projects, #about, #contact, #careers{
     opacity:0;pointer-events:none;
     background:rgba(20,16,14,.55);
-    backdrop-filter:blur(22px) saturate(140%);
-    -webkit-backdrop-filter:blur(22px) saturate(140%);
     z-index:10;
   }
+  /* blur is applied ONLY to the page that's actually open — an inactive
+     (opacity:0) page with a live backdrop-filter still costs GPU time, so
+     keeping it off until the page is shown is a real saving */
   #projects.active, #about.active, #contact.active, #careers.active{
     opacity:1;pointer-events:auto;
+    backdrop-filter:blur(22px) saturate(140%);
+    -webkit-backdrop-filter:blur(22px) saturate(140%);
   }
 
   /* ── HOME */
@@ -941,10 +950,9 @@
 
   .toast{
     position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);
-    background:var(--glass-strong);border:1px solid var(--gold);
+    background:rgba(28,22,18,.94);border:1px solid var(--gold);
     color:var(--gold);font-family:var(--sans);font-size:11px;letter-spacing:.3em;text-transform:uppercase;
     padding:14px 22px;border-radius:999px;z-index:200;
-    backdrop-filter:blur(18px);
     opacity:0;pointer-events:none;
     transition:all .4s var(--ease);
   }

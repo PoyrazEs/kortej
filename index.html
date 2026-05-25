@@ -227,9 +227,12 @@
   /* ───────────────────────────── nav overlay */
   .nav-overlay{
     position:fixed;inset:0;z-index:100;
-    background:var(--glass-strong);
-    backdrop-filter:blur(28px) saturate(140%);
-    -webkit-backdrop-filter:blur(28px) saturate(140%);
+    /* solid panel — no live blur. Fully opaque so menu items read
+       crisply with no ghosting; a soft gradient keeps it from looking
+       like a flat block. */
+    background:
+      radial-gradient(100% 80% at 50% 30%, rgba(52,42,30,.50) 0%, transparent 60%),
+      #100C0A;
     opacity:0;pointer-events:none;
     transition:opacity .5s var(--ease);
     display:flex;align-items:center;justify-content:center;
@@ -291,18 +294,22 @@
   #home{opacity:1;pointer-events:none;z-index:5}
   #home.active{pointer-events:auto}
 
+  /* Pages sit on a solid umber panel — NO backdrop-filter.
+     A live blur is recomputed every frame while the page fades in, which
+     is what caused the stutter on weaker machines. Instead the panel is
+     fully opaque (so the home page behind never ghosts through) but
+     carries a soft static gradient, so it reads as a warm, deep surface
+     rather than a flat block — all at zero rendering cost. */
   #projects, #about, #contact, #careers{
     opacity:0;pointer-events:none;
-    background:rgba(20,16,14,.55);
+    background:
+      radial-gradient(120% 90% at 28% 22%, rgba(58,46,32,.55) 0%, transparent 55%),
+      radial-gradient(110% 80% at 78% 80%, rgba(48,38,28,.50) 0%, transparent 55%),
+      #14100E;
     z-index:10;
   }
-  /* blur is applied ONLY to the page that's actually open — an inactive
-     (opacity:0) page with a live backdrop-filter still costs GPU time, so
-     keeping it off until the page is shown is a real saving */
   #projects.active, #about.active, #contact.active, #careers.active{
     opacity:1;pointer-events:auto;
-    backdrop-filter:blur(22px) saturate(140%);
-    -webkit-backdrop-filter:blur(22px) saturate(140%);
   }
 
   /* ── HOME */
@@ -903,12 +910,10 @@
     position:fixed;inset:0;z-index:120;
     display:flex;align-items:center;justify-content:center;
     padding:24px;
-    background:rgba(20,16,14,0.78);
-    backdrop-filter:blur(28px) saturate(140%);
-    -webkit-backdrop-filter:blur(28px) saturate(140%);
+    /* solid overlay — no live blur */
+    background:rgba(14,10,9,.96);
     opacity:0;pointer-events:none;
     transition:opacity .4s var(--ease);
-    padding:24px;
   }
   .modal.open{opacity:1;pointer-events:auto}
   .modal-card{
@@ -1304,7 +1309,7 @@
     <a href="#contact"  data-link data-i18n="nav_contact">İletişim</a>
   </nav>
   <div class="nav-foot">
-    <span>Istanbul</span>
+    <span>Ankara</span>
     <span>MMXXVI</span>
   </div>
 </div>

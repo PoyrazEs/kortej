@@ -1232,6 +1232,7 @@
     #careers,#contact{align-items:flex-start}
     .feat-dots{bottom:-16vh}
   }
+
 </style>
 </head>
 <body class="intro-on">
@@ -2291,28 +2292,43 @@ handleForm(document.getElementById("careerForm"),  "Kariyer Başvurusu", null, (
   updateCount();
 })();
 
-/* ───────────────────────────── nebula / mist clouds
-   Large, soft density gradients drifting slowly and blending into each
-   other. Kept very subtle — low opacity, tones close to the umber base,
-   so the background colour is enriched, never washed out.
+/* ───────────────────────────── nebula / mist clouds — optimised
+   The nebula is the heaviest visual on the page, so it carries a few
+   built-in optimisations that apply to EVERY device (the look is
+   unchanged — these are pure efficiency wins):
+     · capped at ~30fps — the clouds drift so slowly that 30 and 60 fps
+       look identical, but 30 halves the work
+     · radial-gradient objects are cached per cloud and only rebuilt when
+       the cloud's breathing noticeably changes its size/alpha, instead
+       of allocating a fresh gradient every single frame
+     · 6 clouds instead of 8 — visually indistinguishable, lighter
+     · paused entirely while the browser tab is hidden
+   On top of that, a light safety net: if the page is *genuinely* slow
+   for a sustained stretch (a weak laptop), the nebula — and only the
+   nebula — switches off. Blur, grain and every other effect always stay.
 */
 (function(){
-  const canvas = document.getElementById('smoke');   // reuse existing canvas
+  const canvas = document.getElementById('smoke');
   if(!canvas) return;
   const ctx = canvas.getContext('2d');
 
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   let W = 0, H = 0, dpr = 1;
   let clouds = [];
+  let running = true;
+  let nebulaOff = false;
 
-  // Palette — warm gold tones, brighter than before so the nebula is
-  // clearly visible, but still warm enough not to wash out the umber base.
   const PALETTE = [
-    { core: [176, 146,  92] },  // soft gold
-    { core: [150, 120,  74] },  // tarnished gold
-    { core: [198, 172, 116] },  // light champagne
-    { core: [120,  96,  64] },  // warm umber-bronze
-    { core: [160, 146, 122] },  // warm grey mist
+    { core: [176, 146,  92] },
+    { core: [150, 120,  74] },
+    { core: [198, 172, 116] },
+    { core: [120,  96,  64] },
+    { core: [160, 146, 122] },
   ];
+
+  const CLOUD_COUNT = 6;
 
   function init(){
     dpr = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -2322,9 +2338,8 @@ handleForm(document.getElementById("careerForm"),  "Kariyer Başvurusu", null, (
     canvas.height = Math.floor(H * dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
 
-    const COUNT = 8;
     clouds = [];
-    for(let i = 0; i < COUNT; i++){
+    for(let i = 0; i < CLOUD_COUNT; i++){
       const pal = PALETTE[i % PALETTE.length];
       clouds.push({
         x: Math.random() * W,
@@ -2332,33 +2347,28 @@ handleForm(document.getElementById("careerForm"),  "Kariyer Başvurusu", null, (
         vx: (Math.random() - 0.5) * 0.10,
         vy: (Math.random() - 0.5) * 0.07,
         r: (0.30 + Math.random() * 0.50) * Math.min(W, H),
-        // base opacity — visible, but kept moderate for elegance
         baseAlpha: 0.11 + Math.random() * 0.10,
         bPhase: Math.random() * Math.PI * 2,
         bSpeed: 0.0006 + Math.random() * 0.0011,
         wPhase: Math.random() * Math.PI * 2,
         wSpeed: 0.0004 + Math.random() * 0.0008,
-        core: pal.core
+        core: pal.core,
+        // cached gradient + the breath value it was built at
+        grad: null,
+        gradBreath: -1
       });
     }
   }
 
-  init();
-  window.addEventListener('resize', init);
-
-  function tick(){
-    // fully clear each frame — no additive build-up
+  function drawFrame(){
     ctx.globalCompositeOperation = 'source-over';
     ctx.clearRect(0, 0, W, H);
-
-    // soft-light keeps clouds tinting the base without blowing it out
     ctx.globalCompositeOperation = 'lighter';
 
     for(let i = 0; i < clouds.length; i++){
       const c = clouds[i];
-
       c.bPhase += c.bSpeed;
-      const breath = Math.sin(c.bPhase) * 0.5 + 0.5;        // 0..1
+      const breath = Math.sin(c.bPhase) * 0.5 + 0.5;
       const alpha  = c.baseAlpha * (0.6 + breath * 0.55);
       const radius = c.r * (0.85 + breath * 0.22);
 
@@ -2372,22 +2382,98 @@ handleForm(document.getElementById("careerForm"),  "Kariyer Başvurusu", null, (
       if(c.y < -m)    c.y = H + m;
       if(c.y > H + m) c.y = -m;
 
-      const k = c.core;
-      const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, radius);
-      g.addColorStop(0,    `rgba(${k[0]},${k[1]},${k[2]},${alpha})`);
-      g.addColorStop(0.45, `rgba(${k[0]},${k[1]},${k[2]},${alpha * 0.38})`);
-      g.addColorStop(1,    `rgba(${k[0]},${k[1]},${k[2]},0)`);
+      // rebuild the gradient only when breathing has moved enough to matter
+      // (~3% steps) — otherwise reuse the cached one. Big allocation saving.
+      if(c.grad === null || Math.abs(breath - c.gradBreath) > 0.03){
+        const k = c.core;
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+        g.addColorStop(0,    `rgba(${k[0]},${k[1]},${k[2]},${alpha})`);
+        g.addColorStop(0.45, `rgba(${k[0]},${k[1]},${k[2]},${alpha * 0.38})`);
+        g.addColorStop(1,    `rgba(${k[0]},${k[1]},${k[2]},0)`);
+        c.grad = g;
+        c.gradBreath = breath;
+        c.gradRadius = radius;
+      }
 
-      ctx.fillStyle = g;
+      // translate so the cached (origin-based) gradient lands on the cloud
+      ctx.save();
+      ctx.translate(c.x, c.y);
+      ctx.fillStyle = c.grad;
       ctx.beginPath();
-      ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
+      ctx.arc(0, 0, c.gradRadius, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
-
     ctx.globalCompositeOperation = 'source-over';
+  }
+
+  /* frame loop — capped at ~30fps */
+  const FRAME_MS = 1000 / 30;
+  let lastDraw = 0;
+  function tick(now){
+    if(!running) return;
+    requestAnimationFrame(tick);
+    if(now - lastDraw < FRAME_MS) return;   // throttle to 30fps
+    lastDraw = now;
+    drawFrame();
+    if(monitoring) monitorFrame(now);
+  }
+
+  function stopNebula(){
+    nebulaOff = true;
+    running = false;
+    ctx.clearRect(0, 0, W, H);
+  }
+
+  /* ── light safety net ───────────────────────────────────────────────
+     We don't grade the device up-front any more. We just watch the
+     frame loop for a sustained run of slow frames; only then — when the
+     machine clearly can't cope — do we switch the nebula off. Nothing
+     else is ever touched. */
+  let monitoring = true;
+  let slowStreak = 0;
+  let monStart = 0;
+  let monFrames = 0;
+  let monPrev = 0;
+  function monitorFrame(now){
+    // ignore the first second (load / intro settling)
+    if(monStart === 0){ monStart = now; monPrev = now; return; }
+    if(now - monStart < 1000){ monPrev = now; return; }
+
+    const delta = now - monPrev;
+    monPrev = now;
+    monFrames++;
+
+    // a frame that took much longer than our 30fps budget is "slow"
+    // (>55ms ~= under 18fps). Count consecutive slow frames.
+    if(delta > 55) slowStreak++;
+    else slowStreak = Math.max(0, slowStreak - 1);
+
+    // ~90 bad frames in a row of genuine stutter -> give up the nebula
+    if(slowStreak > 90){
+      monitoring = false;
+      stopNebula();
+      return;
+    }
+    // stop monitoring after ~8s — if it was fine that long, it's fine
+    if(now - monStart > 8000) monitoring = false;
+  }
+
+  window.addEventListener('resize', ()=>{ if(running) init(); });
+
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden){ running = false; }
+    else if(!nebulaOff){ running = true; lastDraw = 0; requestAnimationFrame(tick); }
+  });
+
+  // OS "reduce motion" -> respect it, nebula stays off
+  if(reduceMotion){
+    init();
+    stopNebula();
+  } else {
+    init();
     requestAnimationFrame(tick);
   }
-  requestAnimationFrame(tick);
 })();
 
 /* ───────────────────────────── home feature gallery

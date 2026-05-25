@@ -771,6 +771,32 @@
     font-family:var(--serif);font-weight:300;
     font-size:16px;line-height:1.85;color:var(--linen);opacity:.72;
   }
+  /* direct contact details — phone numbers + email */
+  .contact-details{
+    display:flex;flex-direction:column;gap:22px;
+    margin-top:18px;
+  }
+  .cd-group{display:flex;flex-direction:column;gap:5px}
+  .cd-label{
+    font-family:var(--sans);font-size:9px;letter-spacing:.34em;
+    text-transform:uppercase;color:var(--gold);opacity:.7;
+    margin-bottom:4px;
+  }
+  .cd-group a{
+    font-family:var(--sans);font-weight:300;
+    font-size:15px;letter-spacing:.04em;
+    color:var(--linen);text-decoration:none;
+    transition:color .3s var(--ease);
+    width:fit-content;
+  }
+  .cd-group a:hover{color:var(--gold)}
+  .cd-region{
+    font-style:normal;
+    font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--linen);opacity:.4;
+    margin-left:6px;
+  }
+
   .contact-socials{display:flex;flex-direction:column;gap:2px;margin-top:14px}
   .contact-socials a{
     display:flex;justify-content:space-between;align-items:center;
@@ -1424,6 +1450,21 @@
       <span class="eyebrow" data-i18n="contact_eyebrow">İletişim</span>
       <h1 data-i18n="contact_title">Konuşalım.</h1>
       <p data-i18n="contact_blurb">Bir proje, bir soru ya da yalnızca bir merak — hangisi olursa olsun, sizi dinlemek isteriz. Aşağıdan bize ulaşın; kısa süre içinde dönüş yaparız.</p>
+
+      <!-- direct contact details -->
+      <div class="contact-details">
+        <div class="cd-group">
+          <span class="cd-label" data-i18n="cd_phone">Telefon</span>
+          <a href="tel:+905345157997">+90 534 515 7997</a>
+          <a href="tel:+905337422811">+90 533 742 2811</a>
+          <a href="tel:+393382998098">+39 338 299 8098 <em class="cd-region" data-i18n="cd_europe">Avrupa</em></a>
+        </div>
+        <div class="cd-group">
+          <span class="cd-label" data-i18n="cd_email">E-posta</span>
+          <a href="mailto:contact@kortejmimarlik.com">contact@kortejmimarlik.com</a>
+        </div>
+      </div>
+
       <div class="contact-socials">
         <a href="https://www.instagram.com/kortejmimarlik/" target="_blank" rel="noopener">
           <span>Instagram <em class="new-badge" data-i18n="new_badge">Yeni</em></span><span class="arrow">↗</span>
@@ -1725,6 +1766,7 @@ const I18N = {
     founder2_l2:"Mimarlık, İç Mimarlık, Çevre Tasarımı",
     contact_eyebrow:"İletişim", contact_title:"Konuşalım.",
     contact_blurb:"Bir proje, bir soru ya da yalnızca bir merak — hangisi olursa olsun, sizi dinlemek isteriz. Aşağıdan bize ulaşın; kısa süre içinde dönüş yaparız.",
+    cd_phone:"Telefon", cd_email:"E-posta", cd_europe:"Avrupa",
     c_a_eye:"Bir not bırakın", c_a_title:"Bir not bırakın",
     c_b_eye:"B — Sosyal", c_b_title:"Bizi takip edin", new_badge:"Yeni",
     c_b_note:"Atmosferin ardındaki süreci paylaştığımız kanallar.",
@@ -1775,6 +1817,7 @@ const I18N = {
     founder2_l2:"Architecture, Interior Architecture, Environmental Design",
     contact_eyebrow:"Contact", contact_title:"Let's talk.",
     contact_blurb:"A project, a question, or simply curiosity — whichever it is, we would like to hear from you. Reach us below; we will reply shortly.",
+    cd_phone:"Phone", cd_email:"Email", cd_europe:"Europe",
     c_a_eye:"Leave a note", c_a_title:"Leave a note",
     c_b_eye:"B — Social", c_b_title:"Follow along", new_badge:"New",
     c_b_note:"Channels where we share the process behind the atmosphere.",

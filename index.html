@@ -2160,33 +2160,80 @@ modal.addEventListener("click",e=>{ if(e.target===modal) closeModal(); });
 
 /* ───────────────────────────── forms */
 const toast = document.getElementById("toast");
-function showToast(){
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/mjgzezlz";
+
+function showToast(msg){
+  if(msg){
+    toast.textContent = msg;
+    toast.removeAttribute("data-i18n");   // custom message: keep it as set
+  }
   toast.classList.add("show");
-  setTimeout(()=>toast.classList.remove("show"), 3200);
+  setTimeout(()=>toast.classList.remove("show"), 3600);
 }
-function handleForm(form, after, extraValidate){
+
+/* form -> Formspree.
+   `source` becomes a labelled field so each email shows where it came from.
+   `after` runs on success (e.g. close the modal). */
+function handleForm(form, source, after, extraValidate){
   if(!form) return;
-  form.addEventListener("submit",e=>{
+  form.addEventListener("submit", async e=>{
     e.preventDefault();
+
     // basic required check
     const required = form.querySelectorAll("[required]");
     let ok = true;
     required.forEach(f=>{
-      if(!f.value.trim()){ f.style.borderBottomColor = "#a55"; ok=false; }
+      const empty = (f.type === "file")
+        ? !(f.files && f.files.length)
+        : !f.value.trim();
+      if(empty){ f.style.borderBottomColor = "#a55"; ok=false; }
       else f.style.borderBottomColor = "";
     });
     if(extraValidate && !extraValidate(form)) ok = false;
     if(!ok) return;
-    showToast();
-    form.reset();
-    if(typeof form.__afterReset === 'function') form.__afterReset();
-    after && after();
+
+    // find the submit button to show progress
+    const btn = form.querySelector('[type="submit"]');
+    const btnText = btn ? btn.textContent : "";
+    if(btn){ btn.disabled = true; btn.textContent = "…"; }
+
+    try{
+      const data = new FormData(form);
+      data.append("_kaynak", source);          // which form sent this
+      data.append("_subject", "Kortej — " + source);
+
+      const res = await fetch(FORMSPREE_ENDPOINT, {
+        method: "POST",
+        body: data,
+        headers: { "Accept": "application/json" }
+      });
+
+      if(res.ok){
+        // restore the proper thank-you text (in case a prior error changed it)
+        toast.setAttribute("data-i18n", "thanks");
+        toast.textContent = I18N[lang].thanks || I18N.en.thanks;
+        showToast();
+        form.reset();
+        if(typeof form.__afterReset === 'function') form.__afterReset();
+        after && after();
+      } else {
+        showToast(lang === "tr"
+          ? "Gönderilemedi — lütfen tekrar deneyin."
+          : "Could not send — please try again.");
+      }
+    } catch(err){
+      showToast(lang === "tr"
+        ? "Bağlantı hatası — lütfen tekrar deneyin."
+        : "Connection error — please try again.");
+    } finally {
+      if(btn){ btn.disabled = false; btn.textContent = btnText; }
+    }
   });
 }
-handleForm(document.getElementById("quickForm"));
-handleForm(document.getElementById("processForm"));
-handleForm(document.getElementById("projForm"), closeModal);
-handleForm(document.getElementById("careerForm"), null, (form)=>{
+handleForm(document.getElementById("quickForm"),   "İletişim Notu");
+handleForm(document.getElementById("processForm"), "Hizmet Talebi");
+handleForm(document.getElementById("projForm"),    "Proje Erişim Talebi", closeModal);
+handleForm(document.getElementById("careerForm"),  "Kariyer Başvurusu", null, (form)=>{
   // statement of purpose must be 500 words or fewer
   const sop = form.querySelector('[name="sop"]');
   if(!sop) return true;

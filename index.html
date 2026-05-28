@@ -3,8 +3,60 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Kortej</title>
-<meta name="description" content="Kortej" />
+
+<!-- ───────────────────────────── SEO -->
+<title>Kortej — Architecture & Interior Design Studio | Ankara</title>
+<meta name="description" content="Kortej is an Ankara-based architecture and interior design studio. With 35+ years of experience and 100+ projects across three continents, we design hotels, residences, restaurants and retail spaces." />
+<meta name="keywords" content="Kortej, mimarlık, iç mimarlık, architecture studio, interior design, Ankara mimar, otel tasarımı, villa tasarımı, restoran tasarımı, hospitality design" />
+<meta name="author" content="Kortej" />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://kortejmimarlik.com/" />
+<link rel="alternate" hreflang="tr" href="https://kortejmimarlik.com/" />
+<link rel="alternate" hreflang="en" href="https://kortejmimarlik.com/" />
+<link rel="alternate" hreflang="x-default" href="https://kortejmimarlik.com/" />
+<meta name="theme-color" content="#14100E" />
+
+<!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Kortej" />
+<meta property="og:title" content="Kortej — Architecture & Interior Design Studio" />
+<meta property="og:description" content="An Ankara-based architecture and interior design studio. 35+ years of experience, 100+ projects across three continents." />
+<meta property="og:url" content="https://kortejmimarlik.com/" />
+<meta property="og:image" content="https://kortejmimarlik.com/favicon-512.png" />
+<meta property="og:locale" content="tr_TR" />
+<meta property="og:locale:alternate" content="en_US" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Kortej — Architecture & Interior Design Studio" />
+<meta name="twitter:description" content="An Ankara-based architecture and interior design studio. 35+ years of experience, 100+ projects across three continents." />
+<meta name="twitter:image" content="https://kortejmimarlik.com/favicon-512.png" />
+
+<!-- Structured data — tells Google this is a local design firm -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "Kortej",
+  "description": "Ankara-based architecture and interior design studio working in architecture, interior architecture, environmental design and consultancy.",
+  "url": "https://kortejmimarlik.com/",
+  "email": "contact@kortejmimarlik.com",
+  "telephone": "+90 534 515 7997",
+  "foundingDate": "2006",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Ankara",
+    "addressCountry": "TR"
+  },
+  "areaServed": ["Europe", "Asia", "Africa"],
+  "knowsAbout": ["Architecture", "Interior Architecture", "Environmental Design", "Hospitality Design"],
+  "sameAs": [
+    "https://www.instagram.com/kortejmimarlik/",
+    "https://www.linkedin.com/company/kortej-mimarl%C4%B1k/"
+  ]
+}
+</script>
+
 <link rel="icon" href="favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
@@ -199,26 +251,6 @@
   .footer-mail:hover{opacity:.7;color:var(--gold)}
   body.intro-on .footer-mail{opacity:0}
 
-  .util-btn{
-    background:transparent;border:1px solid var(--line);
-    color:var(--linen);
-    font-family:var(--sans);font-size:10px;letter-spacing:.32em;
-    text-transform:uppercase;
-    padding:10px 14px;border-radius:999px;
-    cursor:pointer;
-    background:rgba(28,22,18,.82);
-    transition:all .35s var(--ease);
-    display:inline-flex;align-items:center;gap:10px;
-  }
-  .util-btn:hover{border-color:var(--gold);color:var(--gold)}
-  .util-btn .dot{
-    width:6px;height:6px;border-radius:50%;
-    background:var(--gold);
-    box-shadow:0 0 10px var(--gold);
-    animation:pulse 2.4s ease-in-out infinite;
-  }
-  .util-btn.muted .dot{background:rgba(238,232,226,.35);box-shadow:none;animation:none}
-  @keyframes pulse{0%,100%{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
 
   .lang{display:flex;gap:0;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(28,22,18,.82)}
   .lang button{
@@ -1282,10 +1314,7 @@
   <canvas id="smoke"></canvas>
 </div>
 
-<!-- ────────────── ambient sound -->
-<audio id="ambiance" loop preload="auto">
-  <source src="ambiance-water.mp3" type="audio/mpeg">
-</audio>
+<!-- ambient sound removed for performance -->
 
 <!-- ────────────── custom cursor -->
 <div class="cursor" id="cursor" aria-hidden="true"></div>
@@ -1305,10 +1334,6 @@
 
 <!-- ────────────── util bar -->
 <div class="util">
-  <button class="util-btn" id="audioBtn" aria-pressed="false">
-    <span class="dot"></span>
-    <span data-i18n="ambient">Atmosfer</span>
-  </button>
   <div class="lang" role="group" aria-label="Dil">
     <button data-lang="tr">TR</button>
     <button data-lang="en" class="active">EN</button>
@@ -1336,7 +1361,8 @@
 
   <!-- left: logo -->
   <div class="home-logo">
-    <img src="kortej-logo.png" alt="Kortej" />
+    <img src="kortej-logo.png" alt="Kortej — Architecture & Interior Design Studio" width="560" height="193" fetchpriority="high" />
+
   </div>
 
   <!-- right: transparent rotating content area -->
@@ -1918,61 +1944,66 @@ document.querySelectorAll(".lang button").forEach(b=>{
   });
 });
 
-/* ───────────────────────────── custom cursor (window-level) */
-const cursor = document.getElementById("cursor");
+/* ───────────────────────────── custom cursor (window-level)
+   The custom ring cursor is a pointer-device feature. On touch devices
+   (phones/tablets) it's hidden in CSS anyway, but we also skip ALL of its
+   JS here so no mousemove listener or animation frame ever runs on mobile
+   — pure performance saving where it matters most. */
+const isTouchDevice = window.matchMedia &&
+  window.matchMedia('(hover:none)').matches;
 
-let mx = window.innerWidth/2, my = window.innerHeight/2;
-let cx = mx, cy = my;   // cursor smooth pos
+if(!isTouchDevice){
+  const cursor = document.getElementById("cursor");
 
-window.addEventListener("mousemove", e => {
-  mx = e.clientX; my = e.clientY;
-  wakeCursor();
-});
-document.addEventListener("mouseleave", () => cursor.classList.add("hidden"));
-document.addEventListener("mouseenter", () => cursor.classList.remove("hidden"));
+  let mx = window.innerWidth/2, my = window.innerHeight/2;
+  let cx = mx, cy = my;   // cursor smooth pos
+  let cursorRunning = false;
 
-function tick(){
-  // cursor follows quickly
-  cx += (mx - cx) * 0.24;
-  cy += (my - cy) * 0.24;
-  // round to whole pixels — avoids sub-pixel compositing work each frame
-  cursor.style.transform =
-    `translate(${Math.round(cx)}px, ${Math.round(cy)}px) translate(-50%, -50%)`;
-
-  // keep animating only until the cursor has caught up with the pointer;
-  // once it's settled, stop the loop entirely (a still mouse costs nothing)
-  if(Math.abs(mx - cx) > 0.1 || Math.abs(my - cy) > 0.1){
-    requestAnimationFrame(tick);
-  } else {
-    cursorRunning = false;
+  function wakeCursor(){
+    if(!cursorRunning){
+      cursorRunning = true;
+      requestAnimationFrame(tick);
+    }
   }
-}
-let cursorRunning = false;
-function wakeCursor(){
-  if(!cursorRunning){
-    cursorRunning = true;
-    requestAnimationFrame(tick);
-  }
-}
 
-// hover state on interactive elements
-const HOVER_SELECTOR = 'a, button, .proj-row, .lang button, .menu-trigger, .util-btn, .socials a';
-function bindHover(){
-  document.querySelectorAll(HOVER_SELECTOR).forEach(el=>{
-    if(el.dataset.hoverBound) return;
-    el.dataset.hoverBound = "1";
-    el.addEventListener("mouseenter", ()=>cursor.classList.add("hover"));
-    el.addEventListener("mouseleave", ()=>cursor.classList.remove("hover"));
+  window.addEventListener("mousemove", e => {
+    mx = e.clientX; my = e.clientY;
+    wakeCursor();
   });
-  // hide cursor over inputs (native text cursor takes over)
-  document.querySelectorAll('input, textarea').forEach(el=>{
-    if(el.dataset.hideBound) return;
-    el.dataset.hideBound = "1";
-    el.addEventListener("mouseenter", ()=>cursor.classList.add("hidden"));
-    el.addEventListener("mouseleave", ()=>cursor.classList.remove("hidden"));
-  });
+  document.addEventListener("mouseleave", () => cursor.classList.add("hidden"));
+  document.addEventListener("mouseenter", () => cursor.classList.remove("hidden"));
+
+  function tick(){
+    cx += (mx - cx) * 0.24;
+    cy += (my - cy) * 0.24;
+    cursor.style.transform =
+      `translate(${Math.round(cx)}px, ${Math.round(cy)}px) translate(-50%, -50%)`;
+    if(Math.abs(mx - cx) > 0.1 || Math.abs(my - cy) > 0.1){
+      requestAnimationFrame(tick);
+    } else {
+      cursorRunning = false;
+    }
+  }
+
+  // hover state on interactive elements
+  const HOVER_SELECTOR = 'a, button, .proj-row, .lang button, .menu-trigger, .socials a';
+  function bindHover(){
+    document.querySelectorAll(HOVER_SELECTOR).forEach(el=>{
+      if(el.dataset.hoverBound) return;
+      el.dataset.hoverBound = "1";
+      el.addEventListener("mouseenter", ()=>cursor.classList.add("hover"));
+      el.addEventListener("mouseleave", ()=>cursor.classList.remove("hover"));
+    });
+    document.querySelectorAll('input, textarea').forEach(el=>{
+      if(el.dataset.hideBound) return;
+      el.dataset.hideBound = "1";
+      el.addEventListener("mouseenter", ()=>cursor.classList.add("hidden"));
+      el.addEventListener("mouseleave", ()=>cursor.classList.remove("hidden"));
+    });
+  }
+  bindHover();
+  window.__bindHover = bindHover;   // so other code can re-bind after render
 }
-bindHover();
 
 /* ───────────────────────────── auto fullscreen attempt
    Browsers do NOT allow auto-fullscreen on page load without user gesture.
@@ -1997,145 +2028,7 @@ const onFirstInteract = ()=>{
 document.addEventListener("click", onFirstInteract);
 document.addEventListener("keydown", onFirstInteract);
 
-/* ───────────────────────────── ambient audio (mp3 loop) */
-const audioBtn   = document.getElementById("audioBtn");
-const ambiAudio  = document.getElementById("ambiance");
-let audioOn = true;          // default: intended ON
-let audioStarted = false;
-
-// gentle fade helper — ease-out curve so it rises softly, not linearly
-function fadeAudio(el, from, to, ms){
-  const steps = 48;
-  const dt = ms / steps;
-  let i = 0;
-  el.volume = Math.max(0, Math.min(1, from));
-  const iv = setInterval(()=>{
-    i++;
-    const t = i / steps;
-    // ease-out cubic — quick to begin, gently settling at the end
-    const eased = 1 - Math.pow(1 - t, 3);
-    const v = from + (to - from) * eased;
-    el.volume = Math.max(0, Math.min(1, v));
-    if(i >= steps){
-      clearInterval(iv);
-      if(to === 0){ try{ el.pause(); }catch(e){} }
-    }
-  }, dt);
-}
-
-const TARGET_VOL = 0.55;     // comfortable ambient level
-
-/* ── quiet OMM drone layered under the water (Web Audio) */
-let ommCtx = null, ommNodes = null;
-function startOmm(){
-  if(ommNodes) return;
-  try {
-    ommCtx = ommCtx || new (window.AudioContext||window.webkitAudioContext)();
-    if(ommCtx.state === 'suspended') ommCtx.resume();
-  } catch(e){ return; }
-  const ctx = ommCtx;
-  const now = ctx.currentTime;
-
-  // master — very quiet, slow swell in
-  const master = ctx.createGain();
-  master.gain.value = 0;
-  master.connect(ctx.destination);
-  master.gain.linearRampToValueAtTime(0.045, now + 6);   // very low ceiling
-
-  // gentle low-pass — warm, no harsh upper harmonics
-  const lp = ctx.createBiquadFilter();
-  lp.type = "lowpass";
-  lp.frequency.value = 480;
-  lp.Q.value = 0.4;
-  lp.connect(master);
-
-  // soft sustained chord — A1 + E2 + A2, all sine
-  const freqs = [55, 82.4, 110];
-  const oscs = freqs.map((f,i)=>{
-    const o = ctx.createOscillator();
-    o.type = "sine";
-    o.frequency.value = f;
-    const g = ctx.createGain();
-    g.gain.value = 0.22 - i*0.04;
-    // slow breathing per voice
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.03 + i*0.012;
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.value = 0.04;
-    lfo.connect(lfoGain).connect(g.gain);
-    o.connect(g).connect(lp);
-    o.start(); lfo.start();
-    return { o, lfo };
-  });
-
-  ommNodes = { master, oscs };
-}
-function stopOmm(){
-  if(!ommNodes || !ommCtx) return;
-  const { master, oscs } = ommNodes;
-  const now = ommCtx.currentTime;
-  master.gain.cancelScheduledValues(now);
-  master.gain.setValueAtTime(master.gain.value, now);
-  master.gain.linearRampToValueAtTime(0, now + 1.5);
-  setTimeout(()=>{
-    oscs.forEach(({o,lfo})=>{ try{o.stop()}catch(e){} try{lfo.stop()}catch(e){} });
-  }, 1700);
-  ommNodes = null;
-}
-
-function startAmbiance(){
-  if(!ambiAudio) return;
-  ambiAudio.volume = 0;
-  const p = ambiAudio.play();
-  if(p && p.catch) p.catch(()=>{});
-  fadeAudio(ambiAudio, 0, TARGET_VOL, 6000);
-  startOmm();
-  audioStarted = true;
-}
-function stopAmbiance(){
-  if(!ambiAudio) return;
-  fadeAudio(ambiAudio, ambiAudio.volume, 0, 1200);
-  stopOmm();
-}
-
-audioBtn.addEventListener("click", ()=>{
-  audioOn = !audioOn;
-  audioBtn.classList.toggle("muted", !audioOn);
-  audioBtn.setAttribute("aria-pressed", audioOn);
-  if(audioOn){
-    startAmbiance();
-  } else {
-    stopAmbiance();
-  }
-});
-
-// Default visual state: ON
-audioBtn.setAttribute("aria-pressed", "true");
-
-// Try to start audio as early as possible. Most browsers block autoplay
-// until a user gesture, so we attempt immediately AND on the first of any
-// interaction event — whichever the browser allows first.
-const tryAutoAudio = () => {
-  if(audioOn && !audioStarted){
-    startAmbiance();
-    // verify it actually began; if blocked, audioStarted stays effective
-    // but playback may be paused — re-attempt on next gesture
-    if(ambiAudio && ambiAudio.paused){
-      audioStarted = false;
-    }
-  }
-};
-
-// immediate attempt (works in some browsers / when site is revisited)
-window.addEventListener("load", tryAutoAudio);
-document.addEventListener("DOMContentLoaded", tryAutoAudio);
-tryAutoAudio();
-
-// fallbacks — first real interaction of any kind
-["click","keydown","mousemove","scroll","touchstart","pointerdown"].forEach(evt=>{
-  document.addEventListener(evt, tryAutoAudio, { passive:true });
-});
-
+/* ambient audio removed — site is silent by design for performance */
 
 /* ───────────────────────────── projects rendering + filter */
 let projFilterCat = 'all';
@@ -2175,7 +2068,7 @@ function renderRows(){
   wrap.querySelectorAll(".inner[data-open]").forEach(inner=>{
     inner.addEventListener("click",()=>openProj(parseInt(inner.dataset.open,10)));
   });
-  if(typeof bindHover === 'function') bindHover();
+  if(typeof window.__bindHover === 'function') window.__bindHover();
 }
 renderRows();
 

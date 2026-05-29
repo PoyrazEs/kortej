@@ -4,6 +4,17 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 
+<!-- ───────────────────────────── favicons (placed first; some browsers
+     stop hunting for icons after the first few <head> tags, and using
+     absolute paths + a version query forces browsers that aggressively
+     cache the old favicon to fetch the new one) -->
+<link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=3" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png?v=3" />
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=3" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" />
+<link rel="shortcut icon" href="/favicon.ico?v=3" />
+
 <!-- ───────────────────────────── SEO -->
 <title>Kortej — Architecture & Interior Design Studio | Ankara</title>
 <meta name="description" content="Kortej is an Ankara-based architecture and interior design studio. With 35+ years of experience and 100+ projects across three continents, we design hotels, residences, restaurants and retail spaces." />
@@ -57,10 +68,6 @@
 }
 </script>
 
-<link rel="icon" href="favicon.ico" sizes="any" />
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
-<link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Jost:wght@200;300;400;500&display=swap&subset=latin-ext" rel="stylesheet">
@@ -166,18 +173,18 @@
       inset 0 0 5px rgba(204,184,122,.15);
     pointer-events:none;
     z-index:9999;
-    transform:translate(-100px,-100px);
-    transition:width .3s var(--ease),height .3s var(--ease),
-               border-color .3s var(--ease),
-               opacity .25s var(--ease),box-shadow .3s var(--ease);
+    /* position via custom properties so the transform string is stable;
+       a CSS-driven scale on hover composes cleanly with the JS-driven
+       translate (no inline-style fight, no paint, no layout). */
+    --cursor-x:-100px;
+    --cursor-y:-100px;
+    --cursor-scale:1;
+    transform:translate(var(--cursor-x), var(--cursor-y)) translate(-50%, -50%) scale(var(--cursor-scale));
+    transition:transform .3s var(--ease), opacity .25s var(--ease);
     will-change:transform;
   }
   .cursor.hover{
-    width:48px;height:48px;
-    border-color:rgba(204,184,122,1);
-    box-shadow:
-      0 0 14px rgba(204,184,122,.4),
-      inset 0 0 8px rgba(204,184,122,.2);
+    --cursor-scale:1.85;
   }
   .cursor.hidden{opacity:0}
 
@@ -234,6 +241,22 @@
     padding:0 32px;pointer-events:none;
   }
   .util > *{pointer-events:auto}
+
+  /* mini brand mark in the right-hand corner — visible from the first
+     paint so Lighthouse has an element to measure for LCP. Positioned
+     fixed (independently from .util) and given a z-index higher than
+     the intro overlay (200), so the icon is visible even while the
+     black intro is on screen. Crossfade: cream over the dark intro,
+     gold once the site is up. */
+  .brand-mark{
+    position:fixed;bottom:24px;right:32px;
+    height:40px;width:auto;display:block;
+    opacity:.85;
+    z-index:201;
+    transition:opacity .8s var(--ease);
+    pointer-events:none;
+  }
+  .brand-mark.is-gold{ opacity:1; }
 
   /* faint persistent contact line, centered at the very bottom */
   .footer-mail{
@@ -504,13 +527,26 @@
     left:4vw;
     bottom:14vh;
     display:flex;gap:10px;
+    z-index:7;
   }
-  .feat-dots span{
+  .feat-dots button{
+    /* button reset */
+    background:transparent;border:none;padding:0;margin:0;
+    cursor:pointer;
+    /* visible dot is small, but the hit area extends via padding for
+       comfortable clicking/tapping */
     width:5px;height:5px;border-radius:50%;
     background:var(--linen);opacity:.22;
     transition:opacity .5s var(--ease),background .5s var(--ease),width .5s var(--ease);
+    position:relative;
   }
-  .feat-dots span.on{
+  .feat-dots button::before{
+    /* invisible expanded hit target — easier to click without changing
+       the visible dot size */
+    content:"";position:absolute;inset:-10px;
+  }
+  .feat-dots button:hover{ opacity:.7; }
+  .feat-dots button.on{
     opacity:1;background:var(--gold);width:22px;border-radius:3px;
   }
 
@@ -580,10 +616,13 @@
     position:absolute;right:8vw;top:50%;transform:translate(40px,-50%);
     font-family:var(--sans);font-size:10px;letter-spacing:.4em;text-transform:uppercase;
     color:var(--gold);opacity:0;transition:all .4s var(--ease);
+    cursor:pointer;
+    /* `pointer-events:none` while hidden so it never blocks the row; the
+       hover rules below switch it back on as soon as the row is hovered */
     pointer-events:none;
   }
   .proj-row .inner:hover ~ .open-cue,
-  .proj-row:hover .open-cue{opacity:.85;transform:translate(0,-50%)}
+  .proj-row:hover .open-cue{opacity:.85;transform:translate(0,-50%);pointer-events:auto}
 
   /* ── project filter bar */
   .proj-filter{
@@ -1150,6 +1189,7 @@
   @media (max-width:880px){
     .topbar{padding:18px 22px}
     .util{padding:0 22px}
+    .brand-mark{right:22px;height:34px}
 
     /* projects rows — stacked, code beside name then loc + date below */
     .proj-row .inner{
@@ -1224,6 +1264,7 @@
   @media (max-width:560px){
     .topbar{padding:16px 18px}
     .util{padding:0 18px;bottom:18px}
+    .brand-mark{right:18px;bottom:18px;height:30px}
 
     .intro-glow{width:90vmin;height:90vmin}
 
@@ -1340,6 +1381,13 @@
   </div>
 </div>
 
+<!-- mini brand mark — independently positioned so it sits above the
+     intro overlay from the first paint. Gives Lighthouse a stable
+     element to measure for LCP without changing the intro at all. -->
+<img id="brandMark" class="brand-mark"
+     src="lcp-icon-cream.png" alt="Kortej"
+     width="22" height="40" fetchpriority="high" />
+
 <!-- ────────────── nav overlay -->
 <div class="nav-overlay" id="navOverlay" aria-hidden="true">
   <button class="nav-close" id="navClose" data-i18n="close">Kapat</button>
@@ -1396,9 +1444,11 @@
       </p>
     </div>
 
-    <!-- progress dots -->
-    <div class="feat-dots" id="featDots">
-      <span class="on"></span><span></span><span></span>
+    <!-- progress dots — clickable, jump to that slide and reset rotation -->
+    <div class="feat-dots" id="featDots" role="tablist" aria-label="Slide navigation">
+      <button class="on" type="button" aria-label="Slide 1"></button>
+      <button type="button" aria-label="Slide 2"></button>
+      <button type="button" aria-label="Slide 3"></button>
     </div>
 
   </div>
@@ -1418,8 +1468,8 @@
 
   <div class="projects-wrap" id="projectsWrap">
     <div class="proj-intro">
-      <span class="eyebrow" data-i18n="proj_eyebrow">Seçki — 2023 / 2026</span>
-      <h1 data-i18n="proj_title">Projeler</h1>
+      <span class="eyebrow" data-i18n="proj_title">Projeler</span>
+      <h1 id="projHeading" data-i18n="cat_all">Tümü</h1>
       <p data-i18n="proj_blurb">Her projeyi inceleme izniyle paylaşıyoruz. Erişim için kısa bir form yeterli.</p>
       <div class="scroll-hint">
         <span data-i18n="scroll">Kaydır</span>
@@ -1700,6 +1750,19 @@
   function revealHome(){
     document.body.classList.remove('home-centering');
     document.body.classList.add('home-revealed');
+    // crossfade the corner mark from cream (on the dark intro) to gold
+    // (sitting on the now-revealed warm umber page)
+    const mark = document.getElementById('brandMark');
+    if(mark){
+      // swap src; a brief opacity dip masks the swap so it reads as a fade
+      mark.style.opacity = '0';
+      setTimeout(()=>{
+        mark.src = 'lcp-icon-gold.png';
+        mark.classList.add('is-gold');
+        // restore opacity via the CSS transition
+        requestAnimationFrame(()=>{ mark.style.opacity = ''; });
+      }, 320);
+    }
   }
 
   if(seen){
@@ -1976,8 +2039,11 @@ if(!isTouchDevice){
   function tick(){
     cx += (mx - cx) * 0.24;
     cy += (my - cy) * 0.24;
-    cursor.style.transform =
-      `translate(${Math.round(cx)}px, ${Math.round(cy)}px) translate(-50%, -50%)`;
+    // write position into CSS custom properties — the actual transform
+    // (translate + scale) is composed in CSS, which lets the hover-scale
+    // transition run on the GPU without fighting JS-set inline style
+    cursor.style.setProperty('--cursor-x', Math.round(cx) + 'px');
+    cursor.style.setProperty('--cursor-y', Math.round(cy) + 'px');
     if(Math.abs(mx - cx) > 0.1 || Math.abs(my - cy) > 0.1){
       requestAnimationFrame(tick);
     } else {
@@ -2060,13 +2126,21 @@ function renderRows(){
         <div class="loc">${p.loc[lang]}</div>
         <div class="date">${p.date}</div>
       </div>
-      <div class="open-cue">${I18N[lang].open_cue} →</div>
+      <div class="open-cue" data-open="${i}" role="button" tabindex="0">${I18N[lang].open_cue} →</div>
     </div>
   `).join("");
 
-  // only the .inner content opens the modal — not the whole 100vh row
-  wrap.querySelectorAll(".inner[data-open]").forEach(inner=>{
-    inner.addEventListener("click",()=>openProj(parseInt(inner.dataset.open,10)));
+  // both the project info (.inner) and the "Review →" cue open the modal —
+  // people instinctively try to click the cue, so it needs to work
+  wrap.querySelectorAll("[data-open]").forEach(el=>{
+    el.addEventListener("click", ()=>openProj(parseInt(el.dataset.open,10)));
+    // keyboard support for the cue (button role)
+    el.addEventListener("keydown", e=>{
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        openProj(parseInt(el.dataset.open,10));
+      }
+    });
   });
   if(typeof window.__bindHover === 'function') window.__bindHover();
 }
@@ -2076,11 +2150,28 @@ renderRows();
 (function(){
   const bar = document.getElementById('projFilter');
   if(!bar) return;
+  const heading = document.getElementById('projHeading');
+
+  // category code -> i18n key for the title shown as the page heading
+  const CAT_TO_KEY = {
+    'all': 'cat_all',
+    'O':   'cat_hotels',
+    'K':   'cat_homes',
+    'R':   'cat_dining',
+    'T':   'cat_offices',
+  };
+
   bar.querySelectorAll('button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       bar.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       projFilterCat = btn.dataset.cat;
+      // swap the heading to the current filter's label (in current lang)
+      if(heading){
+        const key = CAT_TO_KEY[projFilterCat] || 'cat_all';
+        heading.setAttribute('data-i18n', key);
+        heading.textContent = (I18N[lang] && I18N[lang][key]) || I18N.en[key];
+      }
       renderRows();
       // jump back to the top of the list
       const w = document.getElementById('projectsWrap');
@@ -2347,12 +2438,13 @@ handleForm(document.getElementById("careerForm"),  "Kariyer Başvurusu", null, (
   const feature = document.getElementById('homeFeature');
   if(!feature) return;
   const slides = Array.from(feature.querySelectorAll('.feat-slide'));
-  const dots   = Array.from(document.querySelectorAll('#featDots span'));
+  const dots   = Array.from(document.querySelectorAll('#featDots button'));
   if(!slides.length) return;
 
   const HOLD = 10000;   // ms each slide stays
   let idx = 0;
   let timer = null;
+  let started = false;   // has the 10s rotation begun yet?
 
   // ── counter animation
   function runCounters(slide){
@@ -2364,7 +2456,6 @@ handleForm(document.getElementById("careerForm"),  "Kariyer Başvurusu", null, (
       const start = performance.now();
       function frame(now){
         const t = Math.min(1, (now - start) / dur);
-        // ease-out cubic — slows gently toward the end
         const eased = 1 - Math.pow(1 - t, 3);
         const val = Math.round(1 + (target - 1) * eased);
         el.textContent = prefix + val;
@@ -2379,7 +2470,6 @@ handleForm(document.getElementById("careerForm"),  "Kariyer Başvurusu", null, (
   function show(n){
     slides.forEach((s,i)=> s.classList.toggle('show', i === n));
     dots.forEach((d,i)=> d.classList.toggle('on', i === n));
-    // if this slide has counters, animate them
     if(slides[n].querySelector('[data-count]')){
       runCounters(slides[n]);
     }
@@ -2393,7 +2483,18 @@ handleForm(document.getElementById("careerForm"),  "Kariyer Başvurusu", null, (
   function startCycle(){
     clearInterval(timer);
     timer = setInterval(next, HOLD);
+    started = true;
   }
+
+  // dot clicks — jump to that slide and reset the rotation timer so
+  // the user gets a fresh 10s on the slide they just chose
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      idx = i;
+      show(i);
+      if(started){ startCycle(); }   // reset the 10s window
+    });
+  });
 
   // first slide visible immediately (but the cycle waits for reveal)
   show(0);

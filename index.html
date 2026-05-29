@@ -17,8 +17,8 @@
 
 <!-- ───────────────────────────── SEO -->
 <title>Kortej — Architecture & Interior Design Studio | Ankara</title>
-<meta name="description" content="Kortej is an Ankara-based architecture and interior design studio. With 35+ years of experience and 100+ projects across three continents, we design hotels, residences, restaurants and retail spaces." />
-<meta name="keywords" content="Kortej, mimarlık, iç mimarlık, architecture studio, interior design, Ankara mimar, otel tasarımı, villa tasarımı, restoran tasarımı, hospitality design" />
+<meta name="description" content="Kortej, Ankara merkezli mimari ve iç mimarlık stüdyosudur. Türkiye'nin başkentinden Avrupa, Asya ve Afrika'ya; otel, konut, villa, restoran, mağaza ve ofis projeleriyle 35+ yıllık deneyim ve 100+ proje. Architecture and interior design studio based in Ankara, Turkey." />
+<meta name="keywords" content="Kortej, Kortej mimarlık, mimarlık, iç mimarlık, mimari tasarım, architecture studio, interior design, Ankara mimar, Ankara mimarlık, Ankara iç mimar, Türkiye mimarlık, otel tasarımı, hotel design, villa tasarımı, konut tasarımı, residence design, restoran tasarımı, restaurant design, mağaza tasarımı, retail design, ofis tasarımı, office design, hospitality design, mimari danışmanlık, architectural consultancy" />
 <meta name="author" content="Kortej" />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://kortejmimarlik.com/" />
@@ -43,24 +43,68 @@
 <meta name="twitter:description" content="An Ankara-based architecture and interior design studio. 35+ years of experience, 100+ projects across three continents." />
 <meta name="twitter:image" content="https://kortejmimarlik.com/favicon-512.png" />
 
-<!-- Structured data — tells Google this is a local design firm -->
+<!-- Structured data — tells Google this is a local design firm with
+     specific services and service areas. This is the proper, Google-
+     endorsed way to give search engines structured context that
+     doesn't appear visually on the page. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "ProfessionalService",
   "name": "Kortej",
-  "description": "Ankara-based architecture and interior design studio working in architecture, interior architecture, environmental design and consultancy.",
+  "alternateName": ["Kortej Mimarlık", "Kortej Architecture", "Kortej Mimarlık ve İç Mimarlık"],
+  "description": "Ankara merkezli mimari ve iç mimarlık stüdyosu. Türkiye'den Avrupa, Asya ve Afrika'ya uzanan otel, konut, villa, restoran, mağaza ve ofis projeleri. Ankara-based architecture and interior design studio operating internationally.",
   "url": "https://kortejmimarlik.com/",
+  "logo": "https://kortejmimarlik.com/favicon-512.png",
+  "image": "https://kortejmimarlik.com/favicon-512.png",
   "email": "contact@kortejmimarlik.com",
   "telephone": "+90 534 515 7997",
   "foundingDate": "2006",
   "address": {
     "@type": "PostalAddress",
     "addressLocality": "Ankara",
+    "addressRegion": "Ankara",
     "addressCountry": "TR"
   },
-  "areaServed": ["Europe", "Asia", "Africa"],
-  "knowsAbout": ["Architecture", "Interior Architecture", "Environmental Design", "Hospitality Design"],
+  "areaServed": [
+    { "@type": "Country", "name": "Turkey" },
+    { "@type": "Country", "name": "Türkiye" },
+    { "@type": "City", "name": "Ankara" },
+    { "@type": "City", "name": "İstanbul" },
+    { "@type": "Place", "name": "Europe" },
+    { "@type": "Place", "name": "Asia" },
+    { "@type": "Place", "name": "Africa" }
+  ],
+  "knowsAbout": [
+    "Architecture",
+    "Interior Architecture",
+    "Interior Design",
+    "Environmental Design",
+    "Hospitality Design",
+    "Residential Architecture",
+    "Hotel Design",
+    "Restaurant Design",
+    "Retail Design",
+    "Office Design",
+    "Mimarlık",
+    "İç Mimarlık",
+    "Otel Tasarımı",
+    "Konut Tasarımı",
+    "Restoran Tasarımı",
+    "Mağaza Tasarımı",
+    "Ofis Tasarımı"
+  ],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Services",
+    "itemListElement": [
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Hotel Architecture & Interior Design", "alternateName": "Otel Mimarlığı ve İç Mimarlığı" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Residential Architecture & Interior Design", "alternateName": "Konut ve Villa Mimarlığı" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Restaurant & Café Design", "alternateName": "Restoran ve Kafe Tasarımı" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Retail & Workspace Design", "alternateName": "Mağaza ve Ofis Tasarımı" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Architectural Consultancy", "alternateName": "Mimari Danışmanlık" } }
+    ]
+  },
   "sameAs": [
     "https://www.instagram.com/kortejmimarlik/",
     "https://www.linkedin.com/company/kortej-mimarl%C4%B1k/"
@@ -173,20 +217,27 @@
       inset 0 0 5px rgba(204,184,122,.15);
     pointer-events:none;
     z-index:9999;
-    /* position via custom properties so the transform string is stable;
-       a CSS-driven scale on hover composes cleanly with the JS-driven
-       translate (no inline-style fight, no paint, no layout). */
     --cursor-x:-100px;
     --cursor-y:-100px;
-    --cursor-scale:1;
-    transform:translate(var(--cursor-x), var(--cursor-y)) translate(-50%, -50%) scale(var(--cursor-scale));
-    transition:transform .3s var(--ease), opacity .25s var(--ease);
+    transform:translate(var(--cursor-x), var(--cursor-y)) translate(-50%, -50%);
+    /* No transform transition — cursor follows pointer 1:1, zero lag.
+       Hover-grow handled by a dedicated inner element (.cursor::before)
+       so scale can animate without affecting the translate. */
     will-change:transform;
   }
-  .cursor.hover{
-    --cursor-scale:1.85;
+  .cursor::before{
+    content:"";
+    position:absolute;inset:-1.5px;
+    border-radius:50%;
+    border:1.5px solid transparent;
+    transform:scale(1);
+    transition:transform .25s var(--ease), border-color .25s var(--ease);
   }
-  .cursor.hidden{opacity:0}
+  .cursor.hover::before{
+    transform:scale(1.85);
+    border-color:rgba(204,184,122,.5);
+  }
+  .cursor.hidden{opacity:0;transition:opacity .25s var(--ease)}
 
   /* ───────────────────────────── header */
   .topbar{
@@ -246,17 +297,31 @@
      paint so Lighthouse has an element to measure for LCP. Positioned
      fixed (independently from .util) and given a z-index higher than
      the intro overlay (200), so the icon is visible even while the
-     black intro is on screen. Crossfade: cream over the dark intro,
-     gold once the site is up. */
+     black intro is on screen.
+
+     Two stacked images: cream sits on top first, fades out; gold sits
+     underneath and fades in as the cream clears. Sequential fade reads
+     more clearly than a hard swap. */
   .brand-mark{
     position:fixed;bottom:24px;right:32px;
-    height:40px;width:auto;display:block;
-    opacity:.85;
+    height:26px;width:auto;display:block;
     z-index:201;
-    transition:opacity .8s var(--ease);
     pointer-events:none;
   }
-  .brand-mark.is-gold{ opacity:1; }
+  .brand-mark img{
+    position:absolute;top:0;right:0;
+    height:100%;width:auto;display:block;
+  }
+  .brand-mark .bm-cream{
+    opacity:.85;
+    transition:opacity .9s var(--ease);
+  }
+  .brand-mark .bm-gold{
+    opacity:0;
+    transition:opacity .9s var(--ease) .4s;   /* gold waits, then fades in */
+  }
+  .brand-mark.is-gold .bm-cream{ opacity:0; }
+  .brand-mark.is-gold .bm-gold{  opacity:1; }
 
   /* faint persistent contact line, centered at the very bottom */
   .footer-mail{
@@ -1189,7 +1254,7 @@
   @media (max-width:880px){
     .topbar{padding:18px 22px}
     .util{padding:0 22px}
-    .brand-mark{right:22px;height:34px}
+    .brand-mark{right:22px;height:22px}
 
     /* projects rows — stacked, code beside name then loc + date below */
     .proj-row .inner{
@@ -1264,7 +1329,7 @@
   @media (max-width:560px){
     .topbar{padding:16px 18px}
     .util{padding:0 18px;bottom:18px}
-    .brand-mark{right:18px;bottom:18px;height:30px}
+    .brand-mark{right:18px;bottom:18px;height:20px}
 
     .intro-glow{width:90vmin;height:90vmin}
 
@@ -1381,12 +1446,15 @@
   </div>
 </div>
 
-<!-- mini brand mark — independently positioned so it sits above the
-     intro overlay from the first paint. Gives Lighthouse a stable
-     element to measure for LCP without changing the intro at all. -->
-<img id="brandMark" class="brand-mark"
-     src="lcp-icon-cream.png" alt="Kortej"
-     width="22" height="40" fetchpriority="high" />
+<!-- mini brand mark — two stacked images for a sequential cream→gold
+     fade. Sits above the intro overlay from the first paint, giving
+     Lighthouse a stable LCP element. -->
+<div id="brandMark" class="brand-mark" aria-label="Kortej">
+  <img class="bm-cream" src="lcp-icon-cream.png" alt="Kortej"
+       width="14" height="26" fetchpriority="high" />
+  <img class="bm-gold"  src="lcp-icon-gold.png"  alt=""
+       width="14" height="26" />
+</div>
 
 <!-- ────────────── nav overlay -->
 <div class="nav-overlay" id="navOverlay" aria-hidden="true">
@@ -1400,7 +1468,6 @@
   </nav>
   <div class="nav-foot">
     <span>Ankara</span>
-    <span>MMXXVI</span>
   </div>
 </div>
 
@@ -1409,7 +1476,7 @@
 
   <!-- left: logo -->
   <div class="home-logo">
-    <img src="kortej-logo.png" alt="Kortej — Architecture & Interior Design Studio" width="560" height="193" fetchpriority="high" />
+    <img src="kortej-logo.png" alt="Kortej — Ankara merkezli mimari ve iç mimarlık stüdyosu | Architecture & Interior Design Studio in Ankara, Turkey" width="560" height="193" fetchpriority="high" />
 
   </div>
 
@@ -1497,7 +1564,7 @@
       <h1 data-i18n="about_title">Dingin mekânlar. Hassas kararlar.</h1>
       <div class="about-rule"></div>
       <div class="body" id="aboutBody">
-        <p data-i18n="about_p1">Kortej, 2006'dan bu yana Ankara merkezli çalışan bir mimari stüdyodur. Mimarlık, iç mimarlık, çevre tasarımı ve danışmanlık alanlarında; otuz beş yılı aşan deneyim ve üç kıtaya yayılan yüzü aşkın projeyle, farklı ölçeklerde iş üretir.</p>
+        <p data-i18n="about_p1">Kortej, 2006'dan bu yana Ankara merkezli çalışan bir mimari ve iç mimarlık stüdyosudur. Türkiye'nin başkentinden Avrupa, Asya ve Afrika'ya uzanan otel, konut, villa, restoran, mağaza ve ofis projeleriyle; otuz beş yılı aşan deneyim ve üç kıtaya yayılan yüzü aşkın işle, farklı ölçeklerde mimarlık, iç mimarlık, çevre tasarımı ve danışmanlık hizmeti üretir.</p>
         <p data-i18n="about_p2">Bizim için mimarlık, bir mekânın inşası değil; zamanla değer kazanan ve nesiller boyu aktarılan bir yaşam deneyimidir. Her projede, onu kullanacak kişiyi anlamaya zaman ayırır; ona özgü bir bütünlük kurarız. İşlerimizin özgünlüğü kadar gizliliğine de önem veririz — çünkü bir tasarım, sahibinden başkasına ait değildir.</p>
       </div>
       <div class="about-scrollcue" aria-hidden="true">
@@ -1750,19 +1817,11 @@
   function revealHome(){
     document.body.classList.remove('home-centering');
     document.body.classList.add('home-revealed');
-    // crossfade the corner mark from cream (on the dark intro) to gold
-    // (sitting on the now-revealed warm umber page)
+    // sequential cream→gold fade for the corner mark — CSS does the work,
+    // we just flip the class. Cream fades out first, gold fades in after
+    // a short delay, so the change is clearly perceptible (no hard swap).
     const mark = document.getElementById('brandMark');
-    if(mark){
-      // swap src; a brief opacity dip masks the swap so it reads as a fade
-      mark.style.opacity = '0';
-      setTimeout(()=>{
-        mark.src = 'lcp-icon-gold.png';
-        mark.classList.add('is-gold');
-        // restore opacity via the CSS transition
-        requestAnimationFrame(()=>{ mark.style.opacity = ''; });
-      }, 320);
-    }
+    if(mark) mark.classList.add('is-gold');
   }
 
   if(seen){
@@ -1877,7 +1936,7 @@ const I18N = {
     scroll:"Kaydır",
     proj_end_eyebrow:"Devam ediyor", proj_end_title:"Bir sonraki kortej, hazırlanıyor.",
     about_eyebrow:"Stüdyo", about_title:"Dingin mekânlar. Hassas kararlar.",
-    about_p1:"Kortej, 2006'dan bu yana Ankara merkezli çalışan bir mimari stüdyodur. Mimarlık, iç mimarlık, çevre tasarımı ve danışmanlık alanlarında; otuz beş yılı aşan deneyim ve üç kıtaya yayılan yüzü aşkın projeyle, farklı ölçeklerde iş üretir.",
+    about_p1:"Kortej, 2006'dan bu yana Ankara merkezli çalışan bir mimari ve iç mimarlık stüdyosudur. Türkiye'nin başkentinden Avrupa, Asya ve Afrika'ya uzanan otel, konut, villa, restoran, mağaza ve ofis projeleriyle; otuz beş yılı aşan deneyim ve üç kıtaya yayılan yüzü aşkın işle, farklı ölçeklerde mimarlık, iç mimarlık, çevre tasarımı ve danışmanlık hizmeti üretir.",
     about_p2:"Bizim için mimarlık, bir mekânın inşası değil; zamanla değer kazanan ve nesiller boyu aktarılan bir yaşam deneyimidir. Her projede, onu kullanacak kişiyi anlamaya zaman ayırır; ona özgü bir bütünlük kurarız. İşlerimizin özgünlüğü kadar gizliliğine de önem veririz — çünkü bir tasarım, sahibinden başkasına ait değildir.",
     about_founders_cue:"Kurucular",
     founders_eyebrow:"Kurucular",
@@ -1928,7 +1987,7 @@ const I18N = {
     scroll:"Scroll",
     proj_end_eyebrow:"In progress", proj_end_title:"The next cortège is being prepared.",
     about_eyebrow:"Studio", about_title:"Calm spaces. Precise decisions.",
-    about_p1:"Kortej is an Ankara-based architecture studio working since 2006. Across architecture, interior architecture, environmental design and consultancy — with more than thirty-five years of experience and over a hundred projects on three continents — it works at a wide range of scales.",
+    about_p1:"Kortej is an Ankara-based architecture and interior design studio working since 2006. From Turkey's capital across Europe, Asia and Africa, the studio delivers hotels, residences, villas, restaurants, retail spaces and offices — with more than thirty-five years of experience and over a hundred projects on three continents, working at every scale of architecture, interior architecture, environmental design and consultancy.",
     about_p2:"For us, architecture is not the construction of a space but a living experience — one that gains value over time and is passed down through generations. On every project we take the time to understand the person who will live in it, and shape a whole that belongs to them alone. We value the originality of our work as much as its confidentiality — because a design belongs to no one but its owner.",
     about_founders_cue:"Founders",
     founders_eyebrow:"Founders",
@@ -2018,38 +2077,20 @@ const isTouchDevice = window.matchMedia &&
 if(!isTouchDevice){
   const cursor = document.getElementById("cursor");
 
-  let mx = window.innerWidth/2, my = window.innerHeight/2;
-  let cx = mx, cy = my;   // cursor smooth pos
-  let cursorRunning = false;
-
-  function wakeCursor(){
-    if(!cursorRunning){
-      cursorRunning = true;
-      requestAnimationFrame(tick);
-    }
-  }
+  /* The cursor tracks the pointer 1:1 — no smoothing/lerp, no animation
+     loop. Previously we eased toward the pointer position over a few
+     frames (cx += (mx-cx)*0.24), which is what made the cursor feel
+     "lagged" or "delayed" behind the mouse. Direct mapping feels
+     responsive and costs less: the only work per move is writing two
+     CSS custom properties, which the browser handles on the compositor. */
 
   window.addEventListener("mousemove", e => {
-    mx = e.clientX; my = e.clientY;
-    wakeCursor();
-  });
+    cursor.style.setProperty('--cursor-x', e.clientX + 'px');
+    cursor.style.setProperty('--cursor-y', e.clientY + 'px');
+  }, { passive: true });
+
   document.addEventListener("mouseleave", () => cursor.classList.add("hidden"));
   document.addEventListener("mouseenter", () => cursor.classList.remove("hidden"));
-
-  function tick(){
-    cx += (mx - cx) * 0.24;
-    cy += (my - cy) * 0.24;
-    // write position into CSS custom properties — the actual transform
-    // (translate + scale) is composed in CSS, which lets the hover-scale
-    // transition run on the GPU without fighting JS-set inline style
-    cursor.style.setProperty('--cursor-x', Math.round(cx) + 'px');
-    cursor.style.setProperty('--cursor-y', Math.round(cy) + 'px');
-    if(Math.abs(mx - cx) > 0.1 || Math.abs(my - cy) > 0.1){
-      requestAnimationFrame(tick);
-    } else {
-      cursorRunning = false;
-    }
-  }
 
   // hover state on interactive elements
   const HOVER_SELECTOR = 'a, button, .proj-row, .lang button, .menu-trigger, .socials a';
@@ -2068,7 +2109,7 @@ if(!isTouchDevice){
     });
   }
   bindHover();
-  window.__bindHover = bindHover;   // so other code can re-bind after render
+  window.__bindHover = bindHover;
 }
 
 /* ───────────────────────────── auto fullscreen attempt
